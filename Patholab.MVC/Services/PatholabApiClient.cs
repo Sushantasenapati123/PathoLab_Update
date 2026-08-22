@@ -19,10 +19,11 @@ namespace Patholab.MVC.Services
         private readonly HttpClient _client;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public PatholabApiClient(HttpClient client, IHttpContextAccessor httpContextAccessor)
+        public PatholabApiClient(HttpClient client, IHttpContextAccessor httpContextAccessor, Microsoft.Extensions.Configuration.IConfiguration configuration)
         {
             _client = client;
-            _client.BaseAddress = new Uri("https://localhost:7198/"); // API Base address, can be adjusted in appsettings.json
+            var baseUrl = configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7198/";
+            _client.BaseAddress = new Uri(baseUrl);
             _httpContextAccessor = httpContextAccessor;
         }
 

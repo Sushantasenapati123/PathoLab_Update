@@ -58,3 +58,13 @@ nunit-*.xml
 /.vs/Patholab/FileContentIndex/d8c61dcf-a47e-4b77-b60b-f0032ed73493.vsidx
 .vs
 /.vs/Patholab/v18/.suo
+
+# User-specific files
+*.user
+*.userosscache
+*.sln.docstates
+
+# Publish profiles and secrets
+appsettings.Production.json
+[Pp]ublish[Pp]rofiles/
+*.pubxml

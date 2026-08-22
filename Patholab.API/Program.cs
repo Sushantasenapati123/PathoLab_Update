@@ -100,14 +100,11 @@ var app = builder.Build();
 // 6. HTTP Pipeline Configuration
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Patholab API v1");
-    });
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Patholab API v1");
+});
 
 app.UseHttpsRedirection();
 
