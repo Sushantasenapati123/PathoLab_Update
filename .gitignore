@@ -55,3 +55,4 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+/.vs/Patholab/FileContentIndex/d8c61dcf-a47e-4b77-b60b-f0032ed73493.vsidx

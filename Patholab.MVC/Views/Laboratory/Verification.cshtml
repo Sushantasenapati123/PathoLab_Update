@@ -1,0 +1,80 @@
+@model Patholab.Shared.Models.PagedResult<Patholab.Shared.DTOs.ReportDto>
+@{
+    ViewData["Title"] = "Pathologist Review Queue";
+}
+
+<div class="card-custom border-0 shadow-sm">
+    <div class="card-custom-header">
+        <h5 class="card-custom-title"><i class="fa-solid fa-file-signature text-primary"></i> Pathologist Verification Queue</h5>
+    </div>
+
+    <div class="card-custom-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle table-custom m-0">
+                <thead>
+                    <tr>
+                        <th>Report Code</th>
+                        <th>Order Ref</th>
+                        <th>Patient Details</th>
+                        <th>Review Request Date</th>
+                        <th>Interpretation State</th>
+                        <th>Review Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Items == null || Model.Items.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="fa-solid fa-clipboard-check fs-2 d-block mb-2"></i>
+                                Verification queue is empty. No reports awaiting pathologist review.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var r in Model.Items)
+                        {
+                            <tr>
+                                <td class="fw-semibold text-primary">@r.ReportNumber</td>
+                                <td class="fw-bold">@r.OrderNumber</td>
+                                <td>
+                                    <div class="fw-bold text-dark">@r.PatientName</div>
+                                    <span class="text-muted" style="font-size: 11px;">ID: @r.PatientCode</span>
+                                </td>
+                                <td>@r.ReportDate.ToString("dd-MMM-yyyy hh:mm tt")</td>
+                                <td>
+                                    <div style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.5px;">
+                                        @if (r.ReportDetails.Count > 0)
+                                        {
+                                            @string.Join(", ", r.ReportDetails.Select(rd => rd.TestName))
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">No interpretations entered.</span>
+                                        }
+                                    </div>
+                                </td>
+                                <td>
+                                    @{
+                                        var badge = "bg-secondary";
+                                        if (r.ReportStatus == Patholab.Domain.Enums.ReportStatus.Published) badge = "bg-success bg-opacity-10 text-success";
+                                        else if (r.ReportStatus == Patholab.Domain.Enums.ReportStatus.Verified) badge = "bg-info bg-opacity-10 text-info";
+                                        else badge = "bg-warning bg-opacity-10 text-warning";
+                                    }
+                                    <span class="badge @badge" style="font-size: 11px;">@r.ReportStatus</span>
+                                </td>
+                                <td class="text-end">
+                                    <a href="/Laboratory/VerifyDetails/@r.Id" class="btn btn-sm btn-custom-primary px-3 py-1">
+                                        <i class="fa-solid fa-stethoscope me-1"></i> Review Case File
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

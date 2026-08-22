@@ -1,0 +1,197 @@
+@model Patholab.Shared.DTOs.ReportVerificationResponse
+@{
+    Layout = null;
+    var error = ViewBag.Error as string;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Report Authenticity Verification - Patholab</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(180deg, #f0f4f8 0%, #d9e2ec 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .cert-card {
+            width: 100%;
+            max-width: 550px;
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+            border: 1px solid #bcccdc;
+            overflow: hidden;
+        }
+
+        .cert-header {
+            background-color: #0f172a;
+            padding: 30px;
+            color: white;
+            text-align: center;
+            border-bottom: 5px solid #10b981;
+        }
+
+        .cert-header i {
+            font-size: 40px;
+            color: #10b981;
+            margin-bottom: 10px;
+        }
+
+        .cert-header h4 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: 0.5px;
+        }
+
+        .cert-body {
+            padding: 35px;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 13.5px;
+            margin-bottom: 30px;
+        }
+
+        .status-pill.verified {
+            background-color: rgba(16, 185, 129, 0.12);
+            color: #059669;
+        }
+
+        .status-pill.error {
+            background-color: rgba(239, 68, 68, 0.12);
+            color: #dc2626;
+        }
+
+        .meta-list {
+            list-group-style: none;
+            padding: 0;
+            margin: 0 0 30px;
+            font-size: 14px;
+        }
+
+        .meta-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px dashed #e2e8f0;
+        }
+
+        .meta-item:last-child {
+            border-bottom: none;
+        }
+
+        .meta-label {
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .meta-val {
+            color: #0f172a;
+            font-weight: 600;
+        }
+
+        .footer-note {
+            font-size: 11px;
+            color: #64748b;
+            text-align: center;
+            line-height: 1.5;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="cert-card">
+        <!-- HEADER -->
+        <div class="cert-header">
+            <i class="fa-solid fa-shield-halved"></i>
+            <h4>PATHOLAB DIAGNOSTICS</h4>
+            <span class="text-white-50" style="font-size: 12px;">Secure Report Verification Portal</span>
+        </div>
+
+        <!-- BODY -->
+        <div class="cert-body text-center">
+            @if (!string.IsNullOrEmpty(error))
+            {
+                <div class="status-pill error">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Verification Failed
+                </div>
+                <h5 class="fw-bold text-dark mb-3">Invalid or Altered Report</h5>
+                <p class="text-muted mb-4" style="font-size: 13.5px;">
+                    The report number you scanned could not be verified in our registry records. This might be a forged document or entry.
+                </p>
+                <div class="alert alert-danger py-2 border-0" style="font-size: 12px; color: #dc2626; background-color: rgba(239,68,68,0.08);">
+                    Error: @error
+                </div>
+            }
+            else
+            {
+                <div class="status-pill verified">
+                    <i class="fa-solid fa-circle-check"></i> Authentic Clinical Report
+                </div>
+
+                <h5 class="fw-bold text-dark mb-4">Secured Record Verified</h5>
+                
+                <div class="meta-list text-start">
+                    <div class="meta-item">
+                        <span class="meta-label">Patient Name:</span>
+                        <span class="meta-val">@Model.PatientName</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Age / Gender:</span>
+                        <span class="meta-val">@Model.Age Years / @Model.Gender</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Report Number:</span>
+                        <span class="meta-val text-primary">@Model.ReportNumber</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Referral Source:</span>
+                        <span class="meta-val">@Model.DoctorName</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Verification Stamp:</span>
+                        <span class="meta-val">@(Model.VerifiedOn?.ToString("dd-MMM-yyyy hh:mm tt") ?? "N/A")</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Signed-off Pathologist:</span>
+                        <span class="meta-val text-success">@Model.VerifiedBy</span>
+                    </div>
+                </div>
+
+                <div class="alert alert-success border-0 py-3 text-start mb-4" style="background-color: rgba(16,185,129,0.06); color: #065f46; font-size: 12.5px; line-height: 1.5;">
+                    <i class="fa-solid fa-info-circle me-2 fs-5 float-start mt-0.5 text-success"></i>
+                    <strong>Authenticity Confirmation:</strong> This record is registered in the Patholab centralized repository. The printed copy details must match the electronic metadata shown above.
+                </div>
+            }
+
+            <div class="footer-note">
+                Patholab Diagnostics Systems. All digital reports are signed using PKCS#7 secure tokens. Direct questions to audits@patholab.com.
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

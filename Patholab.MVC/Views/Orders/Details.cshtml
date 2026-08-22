@@ -1,0 +1,178 @@
+@model Patholab.Shared.DTOs.OrderDto
+@{
+    ViewData["Title"] = "Case File details";
+    var invoice = ViewBag.Invoice as Patholab.Shared.DTOs.InvoiceDto;
+}
+
+<div class="row g-4">
+    <!-- Main Order Details Card -->
+    <div class="col-lg-8">
+        <div class="card-custom border-0 shadow-sm mb-4">
+            <div class="card-custom-header">
+                <h5 class="card-custom-title"><i class="fa-solid fa-folder-open text-primary"></i> Case File: @Model.OrderNumber</h5>
+                <span class="badge @(Model.OrderStatus == Patholab.Domain.Enums.OrderStatus.Published ? "bg-success bg-opacity-10 text-success" : "bg-warning bg-opacity-10 text-warning")" style="font-size: 12px; font-weight: 600;">@Model.OrderStatus</span>
+            </div>
+
+            <div class="card-custom-body">
+                <!-- Patient summary box -->
+                <div class="border rounded p-3 mb-4 bg-light bg-opacity-30">
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <span class="text-muted d-block" style="font-size: 11.5px; text-transform: uppercase;">Patient Name</span>
+                            <strong>@Model.PatientName</strong>
+                            <span class="text-muted d-block" style="font-size: 11.5px;">Code: @Model.PatientCode</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <span class="text-muted d-block" style="font-size: 11.5px; text-transform: uppercase;">Referral Source</span>
+                            <strong>@(Model.DoctorName ?? "Self Referral (Walk-in)")</strong>
+                            <span class="text-muted d-block" style="font-size: 11.5px;">Order Date: @Model.OrderDate.ToString("dd-MMM-yyyy hh:mm tt")</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tests & Packages booked list -->
+                <h6 class="fw-bold text-dark mb-3">Booked Diagnostic Assays</h6>
+                <div class="table-responsive border rounded mb-4">
+                    <table class="table align-middle m-0" style="font-size: 13.5px;">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3">Assay Name</th>
+                                <th>Sample Specimen</th>
+                                <th class="text-end pe-3">Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var detail in Model.OrderDetails)
+                            {
+                                <tr>
+                                    <td class="ps-3">
+                                        <div class="fw-bold text-dark">@detail.TestName</div>
+                                    </td>
+                                    <td><span class="badge bg-light text-dark">EDTA Whole Blood</span></td>
+                                    <td class="text-end pe-3 fw-medium">@detail.Rate.ToString("C")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Laboratory Specimens Tracker -->
+                <h6 class="fw-bold text-dark mb-3">Specimens collection & lab status</h6>
+                <div class="row g-3">
+                    @foreach (var sample in Model.Samples)
+                    {
+                        <div class="col-md-6">
+                            <div class="border rounded p-3">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <span class="fw-bold text-dark" style="font-size: 13.5px;">@sample.SampleTypeName</span>
+                                    @{
+                                        var smBadge = "bg-secondary";
+                                        if (sample.SampleStatus == Patholab.Domain.Enums.SampleStatus.Completed) smBadge = "bg-success bg-opacity-10 text-success";
+                                        else if (sample.SampleStatus == Patholab.Domain.Enums.SampleStatus.Collected) smBadge = "bg-warning bg-opacity-10 text-warning";
+                                        else if (sample.SampleStatus == Patholab.Domain.Enums.SampleStatus.Rejected) smBadge = "bg-danger bg-opacity-10 text-danger";
+                                        else smBadge = "bg-primary bg-opacity-10 text-primary";
+                                    }
+                                    <span class="badge @smBadge">@sample.SampleStatus</span>
+                                </div>
+                                <div class="text-muted mb-2" style="font-size: 11.5px;">
+                                    ID: @sample.SampleNumber<br />
+                                    Barcode: @(string.IsNullOrEmpty(sample.Barcode) ? "Not Generated" : sample.Barcode)
+                                </div>
+                                @if (sample.SampleStatus == Patholab.Domain.Enums.SampleStatus.Pending)
+                                {
+                                    <a href="/Laboratory/Samples" class="btn btn-sm btn-custom-primary w-100 py-1" style="font-size: 11.5px;">Collect Specimen</a>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Sidebar Invoice Card -->
+    <div class="col-lg-4">
+        <div class="card-custom border-0 shadow-sm h-100">
+            <div class="card-custom-header">
+                <h5 class="card-custom-title"><i class="fa-solid fa-cash-register text-success"></i> Settlement Summary</h5>
+            </div>
+            <div class="card-custom-body">
+                <div class="text-center mb-4">
+                    <span class="text-muted d-block mb-1" style="font-size: 11.5px; text-transform: uppercase;">Payment Status</span>
+                    @{
+                        var payBadge = "bg-secondary";
+                        if (Model.PaymentStatus == Patholab.Domain.Enums.PaymentStatus.Paid) payBadge = "bg-success";
+                        else if (Model.PaymentStatus == Patholab.Domain.Enums.PaymentStatus.PartiallyPaid) payBadge = "bg-warning text-dark";
+                        else payBadge = "bg-danger";
+                    }
+                    <span class="badge @payBadge fs-6 py-2 px-3">@Model.PaymentStatus</span>
+                </div>
+
+                <ul class="list-group list-group-flush mb-4" style="font-size: 13.5px;">
+                    <li class="list-group-item d-flex justify-content-between px-0 py-3">
+                        <span class="text-muted">Total Cost:</span>
+                        <span class="fw-semibold">@Model.TotalAmount.ToString("C")</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0 py-3">
+                        <span class="text-muted">Total Discounts:</span>
+                        <span class="text-success fw-semibold">-$@Model.DiscountAmount.ToString("F2")</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0 py-3">
+                        <span class="text-muted">Net Payable:</span>
+                        <span class="fw-bold text-dark">@Model.NetAmount.ToString("C")</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0 py-3">
+                        <span class="text-muted">Amount Settled:</span>
+                        <span class="text-success fw-bold">@Model.PaidAmount.ToString("C")</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0 py-3 border-bottom-0">
+                        <span class="text-muted">Outstanding Due:</span>
+                        <span class="text-danger fw-bold">@Model.DueAmount.ToString("C")</span>
+                    </li>
+                </ul>
+
+                <div class="d-grid gap-2">
+                    @if (Model.DueAmount > 0 && invoice != null)
+                    {
+                        <a href="/Billing/Collect?invoiceId=@invoice.Id" class="btn btn-warning w-100 py-2 fw-semibold">
+                            <i class="fa-solid fa-hand-holding-dollar me-1"></i> Collect Balance Payment
+                        </a>
+                    }
+                    <button class="btn btn-light border py-2" onclick="window.print()"><i class="fa-solid fa-print me-1"></i> Print Invoice Receipt</button>
+                    
+                    @if (Model.OrderStatus == Patholab.Domain.Enums.OrderStatus.Registered)
+                    {
+                        <hr class="my-3" />
+                        <button class="btn btn-sm btn-outline-danger py-2" onclick="confirmCancel(@Model.Id)"><i class="fa-solid fa-ban me-1"></i> Cancel Booking</button>
+                        <form action="/Orders/Cancel/@Model.Id" method="post" id="cancelForm" class="d-none">
+                            <input type="hidden" name="remarks" id="cancelRemarks" />
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmCancel(id) {
+            Swal.fire({
+                title: 'Cancel Booking?',
+                text: "Specify reason for cancelling this patient order case:",
+                input: 'text',
+                inputAttributes: { required: 'true' },
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Yes, cancel case'
+            }).then((result) => {
+                if (result.isConfirmed && result.value) {
+                    $('#cancelRemarks').val(result.value);
+                    $('#cancelForm').submit();
+                }
+            })
+        }
+    </script>
+}

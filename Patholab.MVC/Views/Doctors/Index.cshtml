@@ -1,0 +1,128 @@
+@model Patholab.Shared.Models.PagedResult<Patholab.Shared.DTOs.DoctorDto>
+@{
+    ViewData["Title"] = "Referral Doctor Profiles";
+    var search = ViewBag.Search as string;
+}
+
+<div class="card-custom border-0 shadow-sm">
+    <div class="card-custom-header">
+        <h5 class="card-custom-title"><i class="fa-solid fa-user-doctor text-primary"></i> Referral Doctor Profiles</h5>
+        <a href="/Doctors/Create" class="btn-custom-primary text-decoration-none">
+            <i class="fa-solid fa-plus me-1"></i> Register New Doctor
+        </a>
+    </div>
+    
+    <div class="card-custom-body">
+        <form action="/Doctors" method="get" class="mb-4">
+            <div class="row g-2">
+                <div class="col-md-5">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
+                        <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Search by name, specialization, or code..." value="@search" />
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-light border w-100">Filter Profiles</button>
+                </div>
+                @if (!string.IsNullOrEmpty(search))
+                {
+                    <div class="col-md-2">
+                        <a href="/Doctors" class="btn btn-link text-muted">Clear Filters</a>
+                    </div>
+                }
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle table-custom m-0">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Doctor Name</th>
+                        <th>Specialization</th>
+                        <th>Qualification</th>
+                        <th>Hospital / Clinic</th>
+                        <th>Mobile Number</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Items == null || Model.Items.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="fa-solid fa-folder-open fs-2 d-block mb-2"></i>
+                                No doctor profiles registered in the system.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var d in Model.Items)
+                        {
+                            <tr>
+                                <td class="fw-semibold text-primary">@d.DoctorCode</td>
+                                <td class="fw-bold text-dark">@d.DoctorName</td>
+                                <td><span class="badge bg-info bg-opacity-10 text-info">@d.Specialization</span></td>
+                                <td>@d.Qualification</td>
+                                <td>@d.HospitalClinicName</td>
+                                <td>@d.Mobile</td>
+                                <td class="text-end">
+                                    <div class="d-inline-flex gap-2">
+                                        <a href="/Doctors/Edit/@d.Id" class="btn btn-sm btn-light border" title="Edit Profile">
+                                            <i class="fa-solid fa-pen text-muted"></i> Edit
+                                        </a>
+                                        <button class="btn btn-sm btn-light border text-danger" onclick="confirmDelete(@d.Id, '@d.DoctorName')" title="Remove Profile">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                        <form action="/Doctors/Delete/@d.Id" method="post" id="delete-form-@d.Id" class="d-none"></form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (Model.TotalPages > 1)
+        {
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center m-0">
+                    <li class="page-item @(Model.PageNumber <= 1 ? "disabled" : "")">
+                        <a class="page-link" href="/Doctors?pageNumber=@(Model.PageNumber - 1)&search=@search">Previous</a>
+                    </li>
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <li class="page-item @(Model.PageNumber == i ? "active" : "")">
+                            <a class="page-link" href="/Doctors?pageNumber=@i&search=@search">@i</a>
+                        </li>
+                    }
+                    <li class="page-item @(Model.PageNumber >= Model.TotalPages ? "disabled" : "")">
+                        <a class="page-link" href="/Doctors?pageNumber=@(Model.PageNumber + 1)&search=@search">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmDelete(id, name) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "Deleting doctor " + name + " will remove referral commissions logs.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Yes, delete doctor'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $('#delete-form-' + id).submit();
+                }
+            })
+        }
+    </script>
+}

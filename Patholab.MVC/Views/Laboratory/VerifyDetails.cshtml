@@ -1,0 +1,183 @@
+@model Patholab.Shared.DTOs.ReportDto
+@{
+    ViewData["Title"] = "Pathology Case Review";
+    var samples = ViewBag.Samples as List<Patholab.Shared.DTOs.SampleDto> ?? new List<Patholab.Shared.DTOs.SampleDto>();
+    var resultsMap = ViewBag.SampleResultsMap as Dictionary<string, List<Patholab.Shared.DTOs.TestResultDto>> ?? new Dictionary<string, List<Patholab.Shared.DTOs.TestResultDto>>();
+}
+
+<div class="row g-4 max-width-1100 mx-auto">
+    <!-- Clinical Results display column -->
+    <div class="col-lg-8">
+        <div class="card-custom border-0 shadow-sm">
+            <div class="card-custom-header">
+                <h5 class="card-custom-title"><i class="fa-solid fa-file-medical text-primary"></i> Clinical Observations: @Model.ReportNumber</h5>
+                <a href="/Laboratory/Verification" class="btn btn-light border btn-sm">
+                    <i class="fa-solid fa-chevron-left me-1"></i> Back to Queue
+                </a>
+            </div>
+
+            <div class="card-custom-body">
+                <!-- Patient Info Banner -->
+                <div class="border rounded p-3 mb-4 bg-light bg-opacity-35" style="font-size: 13px;">
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <span class="text-muted d-block" style="font-size: 11px;">Patient Name</span>
+                            <strong>@Model.PatientName</strong>
+                            <span class="text-muted d-block" style="font-size: 11px;">ID: @Model.PatientCode | Age: @Model.PatientAge Years | Gender: @Model.PatientGender</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <span class="text-muted d-block" style="font-size: 11px;">Case Reference</span>
+                            <strong>Order Number: @Model.OrderNumber</strong>
+                            <span class="text-muted d-block" style="font-size: 11px;">Verifying Pathologist: Dr. Priya Nair, MD</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Parameters by Specimen type -->
+                @foreach (var entry in resultsMap)
+                {
+                    <div class="mb-4">
+                        <div class="fw-bold text-dark mb-2" style="font-size: 14.5px; border-bottom: 2px solid #f1f5f9; padding-bottom: 5px;">
+                            <i class="fa-solid fa-droplet text-danger me-1"></i> Specimen Vial: @entry.Key
+                        </div>
+                        
+                        <div class="table-responsive border rounded">
+                            <table class="table align-middle m-0" style="font-size: 13px;">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-3" style="width: 220px;">Parameter Name</th>
+                                        <th>Observed Value</th>
+                                        <th>Unit</th>
+                                        <th>Reference range</th>
+                                        <th class="pe-3">Clinical Flag</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var res in entry.Value)
+                                    {
+                                        var isAbnormal = res.ResultStatus != Patholab.Domain.Enums.ResultStatus.Normal && res.ResultStatus != Patholab.Domain.Enums.ResultStatus.Pending;
+                                        
+                                        <tr>
+                                            <td class="ps-3">
+                                                <div class="fw-bold text-dark">@res.ParameterName</div>
+                                            </td>
+                                            <td class="fw-bold @(isAbnormal ? "text-danger" : "text-dark")">@res.ResultValue</td>
+                                            <td>@res.Unit</td>
+                                            <td class="text-muted">@res.ReferenceRange</td>
+                                            <td class="pe-3">
+                                                @{
+                                                    var flagBadge = "bg-success";
+                                                    if (res.ResultStatus == Patholab.Domain.Enums.ResultStatus.Critical) flagBadge = "bg-danger";
+                                                    else if (res.ResultStatus == Patholab.Domain.Enums.ResultStatus.High || res.ResultStatus == Patholab.Domain.Enums.ResultStatus.Low) flagBadge = "bg-warning text-dark";
+                                                }
+                                                <span class="badge @flagBadge" style="text-transform: uppercase; font-size: 10.5px;">@res.ResultStatus</span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Pathology approval column -->
+    <div class="col-lg-4">
+        <!-- Verification actions -->
+        <div class="card-custom border-0 shadow-sm mb-4">
+            <div class="card-custom-header">
+                <h5 class="card-custom-title"><i class="fa-solid fa-signature text-success"></i> Digital Sign-off</h5>
+            </div>
+            <div class="card-custom-body">
+                <div class="text-center mb-4">
+                    <span class="text-muted d-block mb-1" style="font-size: 11px; text-transform: uppercase;">Approval State</span>
+                    @{
+                        var stateBadge = "bg-secondary";
+                        if (Model.ReportStatus == Patholab.Domain.Enums.ReportStatus.Published) stateBadge = "bg-success";
+                        else if (Model.ReportStatus == Patholab.Domain.Enums.ReportStatus.Verified) stateBadge = "bg-info text-white";
+                        else stateBadge = "bg-warning text-dark";
+                    }
+                    <span class="badge @stateBadge fs-6 py-2 px-3">@Model.ReportStatus</span>
+                </div>
+
+                @if (Model.ReportStatus == Patholab.Domain.Enums.ReportStatus.Published)
+                {
+                    <div class="alert alert-success text-center py-3 border-0 bg-opacity-10 text-success mb-4" style="font-size: 13.5px;">
+                        <i class="fa-solid fa-circle-check fs-4 d-block mb-2"></i>
+                        Report is digitally signed & published. It is ready for patients.
+                    </div>
+                    <div class="d-grid">
+                        <a href="/Reports/Download/@Model.Id" class="btn btn-success py-2.5 fw-semibold"><i class="fa-solid fa-file-pdf me-1"></i> Download Published PDF</a>
+                    </div>
+                }
+                else
+                {
+                    <form asp-action="VerifyReport" method="post" class="mb-3">
+                        <input type="hidden" name="reportId" value="@Model.Id" />
+                        <div class="mb-3">
+                            <label class="form-label" style="font-size: 13.5px; font-weight: 500;">Pathologist Remarks</label>
+                            <textarea name="remarks" class="form-control" rows="3" placeholder="Enter findings remarks (e.g. Findings correlate with age)..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-warning w-100 py-2.5 fw-semibold text-dark"><i class="fa-solid fa-stamp me-1"></i> Approve & Verify Findings</button>
+                    </form>
+
+                    @if (Model.ReportStatus == Patholab.Domain.Enums.ReportStatus.Verified)
+                    {
+                        <div class="border-top pt-3">
+                            <form asp-action="PublishReport" method="post" class="m-0">
+                                <input type="hidden" name="reportId" value="@Model.Id" />
+                                <button type="submit" class="btn btn-success w-100 py-2.5 fw-semibold"><i class="fa-solid fa-paper-plane me-1"></i> Sign-off & Publish Report</button>
+                            </form>
+                            <span class="text-muted d-block text-center mt-2" style="font-size: 11px;">This embeds QR verification and digitally signs the PDF file.</span>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+
+        <!-- Case timeline -->
+        <div class="card-custom border-0 shadow-sm">
+            <div class="card-custom-header">
+                <h5 class="card-custom-title" style="font-size: 15px;"><i class="fa-solid fa-list-check text-muted"></i> Case File audit</h5>
+            </div>
+            <div class="card-custom-body" style="font-size: 12.5px; line-height: 1.5;">
+                <div class="d-flex gap-3 mb-3">
+                    <div class="text-primary fs-5"><i class="fa-solid fa-circle-check"></i></div>
+                    <div>
+                        <div class="fw-bold text-dark">Order Booked</div>
+                        <span class="text-muted">Registered by receptionist.</span>
+                    </div>
+                </div>
+                <div class="d-flex gap-3 mb-3">
+                    <div class="text-warning fs-5"><i class="fa-solid fa-circle-chevron-down"></i></div>
+                    <div>
+                        <div class="fw-bold text-dark">Specimen Collected</div>
+                        <span class="text-muted">Vial barcode logged in workstation.</span>
+                    </div>
+                </div>
+                @if (Model.ReportStatus == Patholab.Domain.Enums.ReportStatus.Verified || Model.ReportStatus == Patholab.Domain.Enums.ReportStatus.Published)
+                {
+                    <div class="d-flex gap-3 mb-3">
+                        <div class="text-info fs-5"><i class="fa-solid fa-circle-check"></i></div>
+                        <div>
+                            <div class="fw-bold text-dark">Observations Verified</div>
+                            <span class="text-muted">Approved by Pathologist Priya Nair.</span>
+                        </div>
+                    </div>
+                }
+                @if (Model.ReportStatus == Patholab.Domain.Enums.ReportStatus.Published)
+                {
+                    <div class="d-flex gap-3">
+                        <div class="text-success fs-5"><i class="fa-solid fa-circle-check"></i></div>
+                        <div>
+                            <div class="fw-bold text-dark">Published & Dispatched</div>
+                            <span class="text-muted">PDF stored, QR verified.</span>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

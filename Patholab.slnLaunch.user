@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "Patholab.API\\Patholab.API.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "Patholab.MVC\\Patholab.MVC.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

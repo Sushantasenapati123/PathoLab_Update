@@ -1,0 +1,6 @@
+@Patholab.API_HostAddress = http://localhost:5093
+
+GET {{Patholab.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

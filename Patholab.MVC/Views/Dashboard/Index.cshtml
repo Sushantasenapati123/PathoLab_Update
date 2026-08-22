@@ -1,0 +1,277 @@
+@model Patholab.Shared.DTOs.DashboardSummaryDto
+@{
+    ViewData["Title"] = "Lab Command Dashboard";
+    var testStats = ViewBag.TestStats as List<Patholab.Shared.DTOs.TestStatsDto> ?? new List<Patholab.Shared.DTOs.TestStatsDto>();
+    var deptStats = ViewBag.DeptStats as List<Patholab.Shared.DTOs.DepartmentStatsDto> ?? new List<Patholab.Shared.DTOs.DepartmentStatsDto>();
+    var revenue = ViewBag.Revenue as List<Patholab.Shared.DTOs.RevenueChartItem> ?? new List<Patholab.Shared.DTOs.RevenueChartItem>();
+    var recentAudits = ViewBag.RecentAudits as List<Patholab.Shared.DTOs.AuditLogDto> ?? new List<Patholab.Shared.DTOs.AuditLogDto>();
+}
+
+<!-- Dashboard Cards Row -->
+<div class="row g-4 mb-4">
+    <!-- Patients Card -->
+    <div class="col-sm-6 col-lg-3">
+        <div class="card-custom h-100 p-4 border-0 shadow-sm" style="border-left: 4px solid #0ea5e9 !important;">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted d-block mb-1" style="font-size: 12px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Patients Enrolled</span>
+                    <h3 class="m-0 font-outfit fw-bold" style="font-size: 26px;">@Model.TodayPatients</h3>
+                </div>
+                <div class="rounded-3 p-3" style="background-color: rgba(14, 165, 233, 0.15); color: #0ea5e9;">
+                    <i class="fa-solid fa-users fs-4"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Orders Card -->
+    <div class="col-sm-6 col-lg-3">
+        <div class="card-custom h-100 p-4 border-0 shadow-sm" style="border-left: 4px solid #2563eb !important;">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted d-block mb-1" style="font-size: 12px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Booked Orders</span>
+                    <h3 class="m-0 font-outfit fw-bold" style="font-size: 26px;">@Model.TodayOrders</h3>
+                </div>
+                <div class="rounded-3 p-3" style="background-color: rgba(37, 99, 235, 0.15); color: #2563eb;">
+                    <i class="fa-solid fa-file-medical fs-4"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenues Card -->
+    <div class="col-sm-6 col-lg-3">
+        <div class="card-custom h-100 p-4 border-0 shadow-sm" style="border-left: 4px solid #10b981 !important;">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted d-block mb-1" style="font-size: 12px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Collections (Total)</span>
+                    <h3 class="m-0 font-outfit fw-bold" style="font-size: 24px;">@Model.TodayRevenue.ToString("C")</h3>
+                </div>
+                <div class="rounded-3 p-3" style="background-color: rgba(16, 185, 129, 0.15); color: #10b981;">
+                    <i class="fa-solid fa-wallet fs-4"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active collections Card -->
+    <div class="col-sm-6 col-lg-3">
+        <div class="card-custom h-100 p-4 border-0 shadow-sm" style="border-left: 4px solid #f59e0b !important;">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted d-block mb-1" style="font-size: 12px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Specimens in Lab</span>
+                    <h3 class="m-0 font-outfit fw-bold" style="font-size: 26px;">@Model.PendingSamples</h3>
+                </div>
+                <div class="rounded-3 p-3" style="background-color: rgba(245, 158, 11, 0.15); color: #f59e0b;">
+                    <i class="fa-solid fa-vials fs-4"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mb-4">
+    <!-- Revenue Trend Chart -->
+    <div class="col-lg-8">
+        <div class="card-custom h-100 border-0 shadow-sm">
+            <div class="card-custom-header">
+                <h5 class="card-custom-title"><i class="fa-solid fa-chart-line text-primary"></i> Daily Collections Trend (Last 7 Days)</h5>
+            </div>
+            <div class="card-custom-body">
+                <canvas id="revenueChart" style="max-height: 300px;"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Department Doughnut Chart -->
+    <div class="col-lg-4">
+        <div class="card-custom h-100 border-0 shadow-sm">
+            <div class="card-custom-header">
+                <h5 class="card-custom-title"><i class="fa-solid fa-chart-pie text-success"></i> Workload by Department</h5>
+            </div>
+            <div class="card-custom-body d-flex flex-column align-items-center justify-content-center">
+                <div style="position: relative; height:200px; width:200px">
+                    <canvas id="deptChart"></canvas>
+                </div>
+                <div class="mt-4 w-100" style="max-height: 100px; overflow-y: auto;">
+                    <table class="table table-sm table-borderless text-muted m-0" style="font-size: 12px;">
+                        @foreach (var d in deptStats)
+                        {
+                            <tr>
+                                <td><i class="fa-solid fa-circle me-2" style="font-size: 8px;"></i> @d.DepartmentName</td>
+                                <td class="text-end fw-bold text-dark">@d.Count assays</td>
+                            </tr>
+                        }
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tests Table & Audits Row -->
+<div class="row">
+    <!-- Popular Tests -->
+    <div class="col-md-6 col-lg-5">
+        <div class="card-custom border-0 shadow-sm h-100">
+            <div class="card-custom-header">
+                <h5 class="card-custom-title"><i class="fa-solid fa-fire text-danger"></i> Popular Assays</h5>
+            </div>
+            <div class="card-custom-body p-0">
+                <table class="table table-hover align-middle m-0" style="font-size: 13.5px;">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Assay Name</th>
+                            <th class="text-center">Bookings</th>
+                            <th class="text-end pe-4">Share (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (testStats.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="3" class="text-center py-4 text-muted">No test stats available.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            var totalBooked = testStats.Sum(x => x.Count);
+                            foreach (var t in testStats)
+                            {
+                                var share = totalBooked > 0 ? (double)t.Count / totalBooked * 100 : 0;
+                                <tr>
+                                    <td class="ps-4 fw-medium text-dark">@t.TestName</td>
+                                    <td class="text-center">@t.Count</td>
+                                    <td class="text-end pe-4 text-primary fw-semibold">@share.ToString("F1")%</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Audits List -->
+    <div class="col-md-6 col-lg-7">
+        <div class="card-custom border-0 shadow-sm h-100">
+            <div class="card-custom-header">
+                <h5 class="card-custom-title"><i class="fa-solid fa-user-shield text-info"></i> Security & Operation Logs</h5>
+            </div>
+            <div class="card-custom-body p-0">
+                <table class="table table-hover align-middle m-0" style="font-size: 13.5px;">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Action</th>
+                            <th>Staff</th>
+                            <th>Stamp</th>
+                            <th class="pe-4 text-end">Host</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (recentAudits.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">No recent logs.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var audit in recentAudits)
+                            {
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="fw-medium text-dark">@audit.Action</div>
+                                        <div class="text-muted" style="font-size: 11px;">@audit.TableName</div>
+                                    </td>
+                                    <td><span class="badge bg-secondary">@audit.Username</span></td>
+                                    <td>@audit.CreatedOn.ToString("dd-MMM hh:mm tt")</td>
+                                    <td class="pe-4 text-end text-muted" style="font-size: 11px;">@audit.IPAddress</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        $(document).ready(function() {
+            // 1. Setup Revenue Trend Chart
+            var revCtx = document.getElementById('revenueChart').getContext('2d');
+            
+            // Render mock date keys if database lists are empty in simple starts
+            var revLabels = [@Html.Raw(string.Join(",", revenue.Select(r => $"'{r.Date:dd MMM}'")))];
+            var revData = [@string.Join(",", revenue.Select(r => r.Revenue))];
+            
+            if(revLabels.length === 0) {
+                revLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                revData = [12000, 15000, 14200, 18500, 22000, 25600, 19500];
+            }
+
+            new Chart(revCtx, {
+                type: 'line',
+                data: {
+                    labels: revLabels,
+                    datasets: [{
+                        label: 'Collections ($)',
+                        data: revData,
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.05)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#f1f5f9' }
+                        },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+
+            // 2. Setup Department Workload Doughnut Chart
+            var deptCtx = document.getElementById('deptChart').getContext('2d');
+            var deptLabels = [@Html.Raw(string.Join(",", deptStats.Select(d => $"'{d.DepartmentName}'")))];
+            var deptData = [@string.Join(",", deptStats.Select(d => d.Count))];
+
+            if(deptLabels.length === 0) {
+                deptLabels = ['Hematology', 'Biochemistry', 'Serology'];
+                deptData = [15, 30, 8];
+            }
+
+            new Chart(deptCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: deptLabels,
+                    datasets: [{
+                        data: deptData,
+                        backgroundColor: ['#0ea5e9', '#2563eb', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    cutout: '70%'
+                }
+            });
+        });
+    </script>
+}

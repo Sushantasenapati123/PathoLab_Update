@@ -1,0 +1,131 @@
+@model Patholab.Shared.Models.PagedResult<Patholab.Shared.DTOs.OrderDto>
+@{
+    ViewData["Title"] = "Order Bookings Directory";
+    var search = ViewBag.Search as string;
+}
+
+<div class="card-custom border-0 shadow-sm">
+    <div class="card-custom-header">
+        <h5 class="card-custom-title"><i class="fa-solid fa-receipt text-primary"></i> Lab Booking Cases</h5>
+        <a href="/Orders/Create" class="btn-custom-primary text-decoration-none">
+            <i class="fa-solid fa-plus me-1"></i> Register New Case
+        </a>
+    </div>
+
+    <div class="card-custom-body">
+        <!-- Search filter form -->
+        <form action="/Orders" method="get" class="mb-4">
+            <div class="row g-2">
+                <div class="col-md-5">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
+                        <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Search by Order #, Patient Code, or name..." value="@search" />
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-light border w-100">Filter Cases</button>
+                </div>
+                @if (!string.IsNullOrEmpty(search))
+                {
+                    <div class="col-md-2">
+                        <a href="/Orders" class="btn btn-link text-muted">Clear Filters</a>
+                    </div>
+                }
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle table-custom m-0">
+                <thead>
+                    <tr>
+                        <th>Order Number</th>
+                        <th>Patient Name</th>
+                        <th>Referral Doctor</th>
+                        <th>Booking Date</th>
+                        <th>Amount Due</th>
+                        <th>Payment Status</th>
+                        <th>Case Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Items == null || Model.Items.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <i class="fa-solid fa-folder-open fs-2 d-block mb-2"></i>
+                                No diagnostic cases booked in this period.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var o in Model.Items)
+                        {
+                            <tr>
+                                <td class="fw-semibold text-primary">@o.OrderNumber</td>
+                                <td>
+                                    <div class="fw-bold text-dark">@o.PatientName</div>
+                                    <span class="text-muted" style="font-size: 11px;">ID: @o.PatientCode</span>
+                                </td>
+                                <td>@(o.DoctorName ?? "Self Referral")</td>
+                                <td>@o.OrderDate.ToString("dd-MMM-yyyy hh:mm tt")</td>
+                                <td>
+                                    <div class="fw-bold">@o.NetAmount.ToString("C")</div>
+                                    @if (o.DueAmount > 0)
+                                    {
+                                        <span class="text-danger" style="font-size: 11px; font-weight: 500;">Due: @o.DueAmount.ToString("C")</span>
+                                    }
+                                </td>
+                                <td>
+                                    @{
+                                        var payBadge = "bg-secondary";
+                                        if (o.PaymentStatus == Patholab.Domain.Enums.PaymentStatus.Paid) payBadge = "bg-success bg-opacity-10 text-success";
+                                        else if (o.PaymentStatus == Patholab.Domain.Enums.PaymentStatus.PartiallyPaid) payBadge = "bg-warning bg-opacity-10 text-warning";
+                                        else payBadge = "bg-danger bg-opacity-10 text-danger";
+                                    }
+                                    <span class="badge @payBadge" style="font-size: 11.5px; font-weight: 600;">@o.PaymentStatus</span>
+                                </td>
+                                <td>
+                                    @{
+                                        var orderBadge = "bg-secondary";
+                                        if (o.OrderStatus == Patholab.Domain.Enums.OrderStatus.Registered) orderBadge = "bg-primary bg-opacity-10 text-primary";
+                                        else if (o.OrderStatus == Patholab.Domain.Enums.OrderStatus.Published) orderBadge = "bg-success bg-opacity-10 text-success";
+                                        else if (o.OrderStatus == Patholab.Domain.Enums.OrderStatus.Cancelled) orderBadge = "bg-danger bg-opacity-10 text-danger";
+                                        else orderBadge = "bg-warning bg-opacity-10 text-warning";
+                                    }
+                                    <span class="badge @orderBadge" style="font-size: 11.5px; font-weight: 600;">@o.OrderStatus</span>
+                                </td>
+                                <td class="text-end">
+                                    <a href="/Orders/Details/@o.Id" class="btn btn-sm btn-light border">
+                                        <i class="fa-solid fa-folder-open text-muted me-1"></i> View Case File
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (Model.TotalPages > 1)
+        {
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center m-0">
+                    <li class="page-item @(Model.PageNumber <= 1 ? "disabled" : "")">
+                        <a class="page-link" href="/Orders?pageNumber=@(Model.PageNumber - 1)&search=@search">Previous</a>
+                    </li>
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <li class="page-item @(Model.PageNumber == i ? "active" : "")">
+                            <a class="page-link" href="/Orders?pageNumber=@i&search=@search">@i</a>
+                        </li>
+                    }
+                    <li class="page-item @(Model.PageNumber >= Model.TotalPages ? "disabled" : "")">
+                        <a class="page-link" href="/Orders?pageNumber=@(Model.PageNumber + 1)&search=@search">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        }
+    </div>
+</div>

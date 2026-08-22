@@ -1,0 +1,116 @@
+@model Patholab.Shared.DTOs.EnterResultsRequest
+@{
+    ViewData["Title"] = "Lab Result Entry workstation";
+    var sample = ViewBag.Sample as Patholab.Shared.DTOs.SampleDto;
+    var results = ViewBag.Results as List<Patholab.Shared.DTOs.TestResultDto> ?? new List<Patholab.Shared.DTOs.TestResultDto>();
+}
+
+<div class="card-custom border-0 shadow-sm max-width-1000 mx-auto">
+    <div class="card-custom-header">
+        <h5 class="card-custom-title"><i class="fa-solid fa-flask text-primary"></i> Laboratory Entry Workstation</h5>
+        <a href="/Laboratory/Samples" class="btn btn-light border btn-sm">
+            <i class="fa-solid fa-chevron-left me-1"></i> Back to Queue
+        </a>
+    </div>
+
+    <div class="card-custom-body">
+        <!-- Patient & vial details banner -->
+        <div class="border rounded p-3 mb-4 bg-light bg-opacity-35">
+            <div class="row g-3" style="font-size: 13.5px;">
+                <div class="col-sm-4">
+                    <span class="text-muted d-block" style="font-size: 11px; text-transform: uppercase;">Patient Name</span>
+                    <strong>@sample?.PatientName</strong>
+                    <span class="text-muted d-block" style="font-size: 11px;">ID: @sample?.PatientCode</span>
+                </div>
+                <div class="col-sm-4">
+                    <span class="text-muted d-block" style="font-size: 11px; text-transform: uppercase;">Specimen Type</span>
+                    <strong><i class="fa-solid fa-droplet text-danger me-1"></i> @sample?.SampleTypeName</strong>
+                    <span class="text-muted d-block" style="font-size: 11px;">Barcode: @sample?.Barcode</span>
+                </div>
+                <div class="col-sm-4">
+                    <span class="text-muted d-block" style="font-size: 11px; text-transform: uppercase;">Case Reference</span>
+                    <strong>Order Number: @sample?.OrderNumber</strong>
+                    <span class="text-muted d-block" style="font-size: 11px;">Collected On: @sample?.CollectionDateTime?.ToString("dd-MMM hh:mm tt")</span>
+                </div>
+            </div>
+        </div>
+
+        <form asp-action="EnterResults" method="post" id="resultsForm">
+            <input type="hidden" name="SampleId" value="@Model.SampleId" />
+
+            <h6 class="fw-bold text-dark mb-3">Diagnostic Assays Parameters & Reference Standards</h6>
+            <div class="table-responsive border rounded mb-4">
+                <table class="table align-middle m-0" style="font-size: 13.5px;">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3" style="width: 250px;">Parameter Name</th>
+                            <th style="width: 220px;">Observed Value <span class="text-danger">*</span></th>
+                            <th>Unit</th>
+                            <th>Reference Standards</th>
+                            <th>Flag Status</th>
+                            <th class="pe-3" style="width: 200px;">Staff Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var res in results)
+                        {
+                            var isAbnormal = res.ResultStatus != Patholab.Domain.Enums.ResultStatus.Normal && res.ResultStatus != Patholab.Domain.Enums.ResultStatus.Pending;
+                            
+                            <tr>
+                                <td class="ps-3">
+                                    <input type="hidden" name="paramIds" value="@res.TestParameterId" />
+                                    <div class="fw-bold text-dark">@res.ParameterName</div>
+                                </td>
+                                <td>
+                                    <input type="text" name="paramValues" value="@res.ResultValue" class="form-control form-control-sm fw-bold @(isAbnormal ? "text-danger" : "text-dark")" required placeholder="Type result..." />
+                                </td>
+                                <td>@res.Unit</td>
+                                <td>@res.ReferenceRange</td>
+                                <td>
+                                    @if (res.ResultStatus == Patholab.Domain.Enums.ResultStatus.Pending)
+                                    {
+                                        <span class="badge bg-secondary">Pending</span>
+                                    }
+                                    else
+                                    {
+                                        var flagBadge = "bg-success";
+                                        if (res.ResultStatus == Patholab.Domain.Enums.ResultStatus.Critical) flagBadge = "bg-danger";
+                                        else if (res.ResultStatus == Patholab.Domain.Enums.ResultStatus.High || res.ResultStatus == Patholab.Domain.Enums.ResultStatus.Low) flagBadge = "bg-warning text-dark";
+                                        
+                                        <span class="badge @flagBadge" style="text-transform: uppercase;">@res.ResultStatus</span>
+                                    }
+                                </td>
+                                <td class="pe-3">
+                                    <input type="text" name="paramRemarks" value="@res.Remarks" class="form-control form-control-sm" placeholder="e.g. Verified, normal" />
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="text-muted" style="font-size: 12.5px;">
+                    <i class="fa-solid fa-circle-info text-primary"></i> Clinicians will automatically get alerts for Critical flags.
+                </span>
+                <div class="d-inline-flex gap-2">
+                    <button type="submit" class="btn btn-light border"><i class="fa-solid fa-floppy-disk me-1 text-muted"></i> Save Draft</button>
+                </div>
+            </div>
+        </form>
+
+        <hr class="my-4" />
+
+        <!-- Submitting for path verification -->
+        <div class="border rounded p-4 bg-light bg-opacity-30 d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div>
+                <h6 class="fw-bold text-dark mb-1" style="font-size: 14.5px;">Lock Results & Submit to Pathologist</h6>
+                <span class="text-muted" style="font-size: 12.5px;">Locked values cannot be edited without authorization. Pathologist Priya Nair will receive the review request.</span>
+            </div>
+            <form action="/Laboratory/SubmitResults" method="post" class="m-0">
+                <input type="hidden" name="sampleId" value="@Model.SampleId" />
+                <button type="submit" class="btn btn-success fw-semibold"><i class="fa-solid fa-lock me-1"></i> Lock & Request Review</button>
+            </form>
+        </div>
+    </div>
+</div>

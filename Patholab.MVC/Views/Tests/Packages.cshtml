@@ -1,0 +1,47 @@
+@model List<Patholab.Shared.DTOs.TestPackageDto>
+@{
+    ViewData["Title"] = "Test Packages Setup";
+}
+
+<div class="card-custom border-0 shadow-sm">
+    <div class="card-custom-header">
+        <h5 class="card-custom-title"><i class="fa-solid fa-box-archive text-primary"></i> Test Packages (Profiles)</h5>
+        <a href="/Tests" class="btn btn-light border btn-sm"><i class="fa-solid fa-chevron-left me-1"></i> Back to Assays</a>
+    </div>
+
+    <div class="card-custom-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle table-custom m-0">
+                <thead>
+                    <tr>
+                        <th>Package Code</th>
+                        <th>Package Name</th>
+                        <th>Description Details</th>
+                        <th>Original Price</th>
+                        <th>Bundle Price</th>
+                        <th>Client Savings</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in Model)
+                    {
+                        <tr>
+                            <td class="fw-semibold text-primary">@p.PackageCode</td>
+                            <td class="fw-bold text-dark">@p.PackageName</td>
+                            <td>
+                                <div style="max-width: 320px; font-size: 12.5px; line-height: 1.5;" class="text-muted">@p.Description</div>
+                            </td>
+                            <td class="text-decoration-line-through text-muted">@p.OriginalPrice.ToString("C")</td>
+                            <td class="fw-bold text-success" style="font-size: 15px;">@p.PackagePrice.ToString("C")</td>
+                            <td class="text-primary fw-bold">@p.DiscountAmount.ToString("C")</td>
+                            <td>
+                                <span class="badge @(p.IsActive ? "bg-success" : "bg-danger")">@(p.IsActive ? "Active" : "Inactive")</span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

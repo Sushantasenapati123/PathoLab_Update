@@ -1,0 +1,94 @@
+@model Patholab.Shared.DTOs.DoctorDto
+@{
+    ViewData["Title"] = "Edit Doctor Profile";
+}
+
+<div class="card-custom border-0 shadow-sm max-width-800 mx-auto">
+    <div class="card-custom-header">
+        <h5 class="card-custom-title"><i class="fa-solid fa-user-doctor text-primary"></i> Edit Doctor settings: @Model.DoctorCode</h5>
+        <a href="/Doctors" class="btn btn-light border btn-sm">
+            <i class="fa-solid fa-chevron-left me-1"></i> Back to Directory
+        </a>
+    </div>
+
+    <div class="card-custom-body">
+        <form asp-action="Edit" method="post">
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="DoctorCode" />
+
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 border-0" style="font-size: 13.5px; background-color: rgba(239, 68, 68, 0.1); color: #ef4444;"></div>
+
+            <div class="row g-3 mb-4">
+                <!-- Personal Info -->
+                <div class="col-12"><h6 class="text-muted fw-bold mb-0" style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">1. Doctor Details</h6></div>
+                
+                <div class="col-md-6">
+                    <label class="form-label" style="font-size: 13.5px; font-weight: 500;">Doctor Name <span class="text-danger">*</span></label>
+                    <input asp-for="DoctorName" class="form-control" required />
+                    <span asp-validation-for="DoctorName" class="text-danger" style="font-size: 12px;"></span>
+                </div>
+                
+                <div class="col-md-6">
+                    <label class="form-label" style="font-size: 13.5px; font-weight: 500;">Qualification <span class="text-danger">*</span></label>
+                    <input asp-for="Qualification" class="form-control" required />
+                    <span asp-validation-for="Qualification" class="text-danger" style="font-size: 12px;"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label" style="font-size: 13.5px; font-weight: 500;">Specialization <span class="text-danger">*</span></label>
+                    <input asp-for="Specialization" class="form-control" required />
+                    <span asp-validation-for="Specialization" class="text-danger" style="font-size: 12px;"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label" style="font-size: 13.5px; font-weight: 500;">Hospital / Clinic Name</label>
+                    <input asp-for="HospitalClinicName" class="form-control" />
+                </div>
+
+                <!-- Contact details -->
+                <div class="col-12 mt-4"><h6 class="text-muted fw-bold mb-0" style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">2. Contact details & Location</h6></div>
+
+                <div class="col-md-6">
+                    <label class="form-label" style="font-size: 13.5px; font-weight: 500;">Mobile Number <span class="text-danger">*</span></label>
+                    <input asp-for="Mobile" class="form-control" required />
+                    <span asp-validation-for="Mobile" class="text-danger" style="font-size: 12px;"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label" style="font-size: 13.5px; font-weight: 500;">Email Address</label>
+                    <input asp-for="Email" class="form-control" type="email" />
+                    <span asp-validation-for="Email" class="text-danger" style="font-size: 12px;"></span>
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label" style="font-size: 13.5px; font-weight: 500;">Clinic Address</label>
+                    <input asp-for="Address" class="form-control" />
+                </div>
+
+                <!-- Referral Commissions settings -->
+                <div class="col-12 mt-4"><h6 class="text-muted fw-bold mb-0" style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">3. Commission Audit Settings</h6></div>
+
+                <div class="col-md-6">
+                    <label class="form-label" style="font-size: 13.5px; font-weight: 500;">Commission Type</label>
+                    <select asp-for="CommissionType" class="form-select">
+                        <option value="Percentage">Percentage (%)</option>
+                        <option value="Fixed">Fixed Amount ($)</option>
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label" style="font-size: 13.5px; font-weight: 500;">Commission Rate / Value <span class="text-danger">*</span></label>
+                    <input asp-for="CommissionValue" type="number" step="0.01" class="form-control" required />
+                    <span asp-validation-for="CommissionValue" class="text-danger" style="font-size: 12px;"></span>
+                </div>
+            </div>
+
+            <hr class="my-4" />
+
+            <div class="d-flex justify-content-end gap-2">
+                <a href="/Doctors" class="btn btn-light border">Cancel</a>
+                <button type="submit" class="btn-custom-primary">Update Referral Settings</button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Patholab Diagnostic System</title>
+    
+    <!-- Core UI CSS -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    
+    <!-- Premium Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom Design Token Styles -->
+    <style>
+        :root {
+            --primary-bg: #f8fafc;
+            --sidebar-bg: #0f172a;
+            --sidebar-color: #94a3b8;
+            --sidebar-active-bg: #1e293b;
+            --sidebar-active-color: #38bdf8;
+            --card-border-color: #e2e8f0;
+            --brand-gradient: linear-gradient(135deg, #0ea5e9, #2563eb);
+            --header-bg: rgba(255, 255, 255, 0.85);
+            --accent-blue: #2563eb;
+            --accent-green: #10b981;
+            --font-inter: 'Inter', sans-serif;
+            --font-outfit: 'Outfit', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-inter);
+            background-color: var(--primary-bg);
+            color: #1e293b;
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1, h2, h3, h4, h5, .brand-title {
+            font-family: var(--font-outfit);
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            background-color: var(--sidebar-bg);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            box-shadow: 4px 0 10px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-section {
+            padding: 20px;
+            border-bottom: 1px solid #1e293b;
+            background: var(--brand-gradient);
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-section i {
+            font-size: 24px;
+        }
+
+        .brand-title {
+            font-size: 19px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin: 0;
+        }
+
+        .menu-section {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 15px 0;
+        }
+
+        .menu-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #64748b;
+            padding: 10px 24px 5px;
+            font-weight: 700;
+        }
+
+        .nav-link-custom {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 24px;
+            color: var(--sidebar-color);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-link-custom:hover {
+            background-color: var(--sidebar-active-bg);
+            color: white;
+        }
+
+        .nav-link-custom.active {
+            background-color: var(--sidebar-active-bg);
+            color: var(--sidebar-active-color);
+            border-left-color: var(--sidebar-active-color);
+            font-weight: 600;
+        }
+
+        .nav-link-custom i {
+            font-size: 16px;
+            width: 20px;
+        }
+
+        /* Main Workspace Wrapper */
+        .workspace {
+            margin-left: 260px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+
+        /* Top Header Navigation */
+        .workspace-header {
+            height: 65px;
+            background-color: var(--header-bg);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--card-border-color);
+            position: sticky;
+            top: 0;
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+        }
+
+        .user-dropdown-btn {
+            background: none;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 5px 12px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .user-dropdown-btn:hover {
+            background-color: #f1f5f9;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--accent-blue);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .user-info-text {
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-size: 13.5px;
+            font-weight: 600;
+            color: #0f172a;
+            margin: 0;
+        }
+
+        .user-role {
+            font-size: 10.5px;
+            color: #64748b;
+            margin: 0;
+        }
+
+        .content-container {
+            flex-grow: 1;
+            padding: 30px;
+        }
+
+        /* Premium Shared UI Styles */
+        .card-custom {
+            background-color: white;
+            border: 1px solid var(--card-border-color);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.01);
+            margin-bottom: 25px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card-custom-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--card-border-color);
+            background-color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+
+        .card-custom-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: #0f172a;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-custom-body {
+            padding: 24px;
+        }
+
+        /* Datatable premium headers */
+        .table-custom {
+            width: 100% !important;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .table-custom th {
+            background-color: #f8fafc;
+            color: #475569;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 14px 18px;
+            border-bottom: 2px solid var(--card-border-color);
+        }
+
+        .table-custom td {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--card-border-color);
+            font-size: 13.5px;
+            vertical-align: middle;
+        }
+
+        .table-custom tbody tr:hover {
+            background-color: #f8fafc;
+        }
+
+        /* Badge Custom styling */
+        .badge-custom {
+            padding: 6px 12px;
+            font-weight: 600;
+            font-size: 11px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            text-transform: capitalize;
+        }
+
+        /* Button configurations */
+        .btn-custom-primary {
+            background: var(--brand-gradient);
+            border: none;
+            color: white;
+            font-weight: 600;
+            font-size: 13.5px;
+            padding: 9px 18px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(14, 165, 233, 0.2);
+        }
+
+        .btn-custom-primary:hover {
+            background: linear-gradient(135deg, #0284c7, #1d4ed8);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+            color: white;
+        }
+
+        /* Footer styling */
+        .workspace-footer {
+            height: 50px;
+            border-top: 1px solid var(--card-border-color);
+            background-color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #64748b;
+        }
+    </style>
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+
+    <!-- SIDEBAR NAVIGATION -->
+    <div class="sidebar">
+        <div class="brand-section">
+            <i class="fa-solid fa-microscope text-white"></i>
+            <h1 class="brand-title">PATHOLAB</h1>
+        </div>
+        
+        <div class="menu-section">
+            <div class="menu-label">Main Console</div>
+            <a href="/Dashboard" class="nav-link-custom @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "active" : "")">
+                <i class="fa-solid fa-chart-pie"></i> Dashboard
+            </a>
+            
+            <div class="menu-label">Registration & Bills</div>
+            <a href="/Patients" class="nav-link-custom @(ViewContext.RouteData.Values["controller"]?.ToString() == "Patients" ? "active" : "")">
+                <i class="fa-solid fa-hospital-user"></i> Patients Master
+            </a>
+            <a href="/Doctors" class="nav-link-custom @(ViewContext.RouteData.Values["controller"]?.ToString() == "Doctors" ? "active" : "")">
+                <i class="fa-solid fa-user-doctor"></i> Doctor Profiles
+            </a>
+            <a href="/Orders/Create" class="nav-link-custom @(ViewContext.RouteData.Values["controller"]?.ToString() == "Orders" && ViewContext.RouteData.Values["action"]?.ToString() == "Create" ? "active" : "")">
+                <i class="fa-solid fa-calendar-plus"></i> Order Booking
+            </a>
+            <a href="/Orders" class="nav-link-custom @(ViewContext.RouteData.Values["controller"]?.ToString() == "Orders" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
+                <i class="fa-solid fa-receipt"></i> Booking History
+            </a>
+            <a href="/Billing/Invoices" class="nav-link-custom @(ViewContext.RouteData.Values["controller"]?.ToString() == "Billing" ? "active" : "")">
+                <i class="fa-solid fa-credit-card"></i> Invoices & Receipts
+            </a>
+
+            <div class="menu-label">Laboratory Workstation</div>
+            <a href="/Laboratory/Samples" class="nav-link-custom @(ViewContext.RouteData.Values["controller"]?.ToString() == "Laboratory" && ViewContext.RouteData.Values["action"]?.ToString() == "Samples" ? "active" : "")">
+                <i class="fa-solid fa-vial"></i> Specimens Receipt
+            </a>
+            <a href="/Laboratory/Verification" class="nav-link-custom @(ViewContext.RouteData.Values["controller"]?.ToString() == "Laboratory" && ViewContext.RouteData.Values["action"]?.ToString() == "Verification" ? "active" : "")">
+                <i class="fa-solid fa-file-signature"></i> Pathologist Review
+            </a>
+            <a href="/Reports" class="nav-link-custom @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reports" ? "active" : "")">
+                <i class="fa-solid fa-file-medical"></i> Diagnostic Reports
+            </a>
+
+            <div class="menu-label">Operations</div>
+            <a href="/HomeCollection" class="nav-link-custom @(ViewContext.RouteData.Values["controller"]?.ToString() == "HomeCollection" ? "active" : "")">
+                <i class="fa-solid fa-house-chimney-medical"></i> Home Collections
+            </a>
+            
+            @if (User.IsInRole("Super Admin") || User.IsInRole("Lab Admin"))
+            {
+                <div class="menu-label">Administration</div>
+                <a href="/Admin/Users" class="nav-link-custom @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["action"]?.ToString() == "Users" ? "active" : "")">
+                    <i class="fa-solid fa-users-gear"></i> User Accounts
+                </a>
+                <a href="/Admin/AuditLogs" class="nav-link-custom @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["action"]?.ToString() == "AuditLogs" ? "active" : "")">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Security Audits
+                </a>
+                <a href="/Admin/TodayLogs" class="nav-link-custom @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["action"]?.ToString() == "TodayLogs" ? "active" : "")">
+                    <i class="fa-solid fa-file-lines"></i> System Logs
+                </a>
+                <a href="/Tests" class="nav-link-custom @(ViewContext.RouteData.Values["controller"]?.ToString() == "Tests" ? "active" : "")">
+                    <i class="fa-solid fa-sliders"></i> Diagnostic Setup
+                </a>
+            }
+        </div>
+    </div>
+
+    <!-- WORKSPACE -->
+    <div class="workspace">
+        <!-- TOPBAR HEADER -->
+        <div class="workspace-header">
+            <div class="d-flex align-items-center gap-3">
+                <button class="btn btn-sm btn-light border d-md-none" id="mobile-toggle-btn">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <div class="text-muted d-none d-md-block" style="font-size: 13px;">
+                    <i class="fa-solid fa-building-circle-check text-success"></i> <strong>Central Lab Branch</strong>
+                </div>
+            </div>
+            
+            <!-- User Profiles Dropdown -->
+            <div class="dropdown">
+                <button class="user-dropdown-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    @{
+                        var fName = Context.Session.GetString("UserFullName") ?? "Central Staff";
+                        var firstLetter = fName.Length > 0 ? fName.Substring(0, 1) : "S";
+                        var roleName = Context.Session.GetString("UserRole") ?? "Staff";
+                    }
+                    <div class="user-avatar">@firstLetter</div>
+                    <div class="user-info-text d-none d-md-flex">
+                        <span class="user-name">@fName</span>
+                        <span class="user-role">@roleName</span>
+                    </div>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="font-size: 14px;">
+                    <li>
+                        <div class="px-3 py-2 border-bottom">
+                            <span class="d-block text-muted" style="font-size: 11px; text-transform: uppercase; font-weight: 600;">Signed in as</span>
+                            <strong>@fName</strong>
+                        </div>
+                    </li>
+                    <li><a class="dropdown-item py-2" href="#"><i class="fa-solid fa-user-gear me-2 text-muted"></i> Account Settings</a></li>
+                    <li><a class="dropdown-item py-2" href="/Dashboard/DownloadManual"><i class="fa-solid fa-file-pdf me-2 text-success"></i> Download User Guide</a></li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li>
+                        <form action="/Account/Logout" method="post" id="logout-form" class="m-0">
+                            <button type="submit" class="dropdown-item py-2 text-danger"><i class="fa-solid fa-right-from-bracket me-2"></i> Log Out</button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT WORKSPACE -->
+        <div class="content-container">
+            @RenderBody()
+        </div>
+
+        <!-- FOOTER -->
+        <div class="workspace-footer">
+            &copy; 2026 Patholab Diagnostic Management Suite. All rights reserved.
+        </div>
+    </div>
+
+    <!-- Core UI Scripts -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Collapsible Sidebar Toggle on Mobile -->
+    <script>
+        $(document).ready(function() {
+            $('#mobile-toggle-btn').click(function() {
+                var sidebar = $('.sidebar');
+                var workspace = $('.workspace');
+                if (sidebar.css('left') === '0px') {
+                    sidebar.css('left', '-260px');
+                    workspace.css('margin-left', '0');
+                } else {
+                    sidebar.css('left', '0px');
+                    workspace.css('margin-left', '260px');
+                }
+            });
+        });
+    </script>
+
+    <!-- SweetAlert Notifier for temp states -->
+    @if (TempData["Success"] != null)
+    {
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: '@Html.Raw(TempData["Success"])',
+                timer: 3500,
+                confirmButtonColor: '#2563eb'
+            });
+        </script>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Operation Failed',
+                text: '@Html.Raw(TempData["Error"])',
+                confirmButtonColor: '#2563eb'
+            });
+        </script>
+    }
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

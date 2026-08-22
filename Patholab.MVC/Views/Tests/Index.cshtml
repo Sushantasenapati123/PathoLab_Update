@@ -1,0 +1,63 @@
+@model Patholab.Shared.Models.PagedResult<Patholab.Shared.DTOs.TestDto>
+@{
+    ViewData["Title"] = "Lab Diagnostic Setup";
+    var search = ViewBag.Search as string;
+}
+
+<div class="card-custom border-0 shadow-sm">
+    <div class="card-custom-header">
+        <h5 class="card-custom-title"><i class="fa-solid fa-sliders text-primary"></i> Lab Diagnostic Setup</h5>
+        <div class="d-inline-flex gap-2">
+            <a href="/Tests/Packages" class="btn btn-outline-primary btn-sm"><i class="fa-solid fa-box-archive me-1"></i> View Test Packages</a>
+            <a href="/Tests/Create" class="btn-custom-primary text-decoration-none"><i class="fa-solid fa-plus me-1"></i> Configure Test</a>
+        </div>
+    </div>
+
+    <div class="card-custom-body">
+        <form action="/Tests" method="get" class="mb-4">
+            <div class="row g-2">
+                <div class="col-md-5">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
+                        <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Search tests by name or code..." value="@search" />
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-light border w-100">Filter Tests</button>
+                </div>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle table-custom m-0">
+                <thead>
+                    <tr>
+                        <th>Test Code</th>
+                        <th>Test Name</th>
+                        <th>Assigned Department</th>
+                        <th>Required Specimen</th>
+                        <th>Turnaround (TAT)</th>
+                        <th>Standard Price</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in Model.Items)
+                    {
+                        <tr>
+                            <td class="fw-semibold text-primary">@t.TestCode</td>
+                            <td class="fw-bold text-dark">@t.TestName</td>
+                            <td><span class="badge bg-light text-dark border">@t.DepartmentName</span></td>
+                            <td><span class="badge bg-danger bg-opacity-10 text-danger">@t.SampleTypeName</span></td>
+                            <td>@t.TATMinutes Minutes</td>
+                            <td class="fw-bold">@t.Price.ToString("C")</td>
+                            <td class="text-end">
+                                <a href="/Tests/Edit/@t.Id" class="btn btn-sm btn-light border"><i class="fa-solid fa-pen text-muted"></i> Edit</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

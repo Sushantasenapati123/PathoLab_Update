@@ -1,0 +1,409 @@
+@model string
+@using System.Text.Encodings.Web
+@{
+    ViewData["Title"] = "System Diagnostics - Today's Logs";
+}
+
+<div class="card-custom border-0 shadow-sm mb-4">
+    <div class="card-custom-header py-3">
+        <h5 class="card-custom-title">
+            <i class="fa-solid fa-terminal text-primary"></i> 
+            System Diagnostics: Today's Logs
+        </h5>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-light text-muted border py-2 px-3">
+                <i class="fa-solid fa-file-invoice text-primary me-1"></i> File: log-@(DateTime.Now.ToString("yyyyMMdd")).txt
+            </span>
+        </div>
+    </div>
+
+    <div class="card-custom-body">
+        <!-- Interactive Controls -->
+        <div class="row g-3 align-items-center mb-4">
+            <!-- Search Logs -->
+            <div class="col-lg-4 col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0 text-muted">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" id="log-search" class="form-control border-start-0 ps-0" placeholder="Search log content (e.g., SqlException)..." />
+                </div>
+            </div>
+
+            <!-- Level Filters -->
+            <div class="col-lg-5 col-md-12 d-flex flex-wrap gap-2 align-items-center">
+                <button type="button" class="btn btn-sm btn-outline-secondary active filter-btn" data-filter="all">
+                    All (<span id="count-all">0</span>)
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-info filter-btn" data-filter="info">
+                    <i class="fa-solid fa-circle-info me-1"></i> Info (<span id="count-info">0</span>)
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-warning filter-btn" data-filter="warning">
+                    <i class="fa-solid fa-triangle-exclamation me-1"></i> Warnings (<span id="count-warn">0</span>)
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger filter-btn" data-filter="error">
+                    <i class="fa-solid fa-circle-exclamation me-1"></i> Errors (<span id="count-error">0</span>)
+                </button>
+            </div>
+
+            <!-- Actions -->
+            <div class="col-lg-3 col-md-6 d-flex justify-content-lg-end gap-2">
+                <button type="button" id="btn-refresh" class="btn btn-sm btn-custom-primary d-inline-flex align-items-center gap-2">
+                    <i class="fa-solid fa-rotate" id="refresh-icon"></i> Refresh
+                </button>
+                <button type="button" id="btn-copy" class="btn btn-sm btn-light border d-inline-flex align-items-center gap-2" title="Copy Raw Logs">
+                    <i class="fa-regular fa-copy"></i> Copy
+                </button>
+                <button type="button" id="btn-bottom" class="btn btn-sm btn-light border d-inline-flex align-items-center gap-2" title="Scroll to Bottom">
+                    <i class="fa-solid fa-arrow-down"></i> Bottom
+                </button>
+            </div>
+        </div>
+
+        <!-- Terminal Window View -->
+        <div class="terminal-window shadow rounded-3 overflow-hidden">
+            <!-- Mock Terminal Header -->
+            <div class="terminal-header d-flex align-items-center justify-content-between px-3 py-2" style="background-color: #1e293b;">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="terminal-dot bg-danger" style="width: 12px; height: 12px; border-radius: 50%;"></div>
+                    <div class="terminal-dot bg-warning" style="width: 12px; height: 12px; border-radius: 50%;"></div>
+                    <div class="terminal-dot bg-success" style="width: 12px; height: 12px; border-radius: 50%;"></div>
+                    <span class="ms-2 text-muted" style="font-size: 11px; font-family: monospace;">logs@patholab-api: ~/diagnostics</span>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="form-check form-switch m-0 d-flex align-items-center gap-2">
+                        <input class="form-check-input" type="checkbox" role="switch" id="switch-autoscroll" checked>
+                        <label class="form-check-label text-muted" style="font-size: 11px; font-family: monospace;" for="switch-autoscroll">Auto-scroll</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Logs Display Shell -->
+            <div id="log-display-container" style="background-color: #0f172a; height: 600px; overflow-y: auto; padding: 18px; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 12.5px; line-height: 1.6; color: #e2e8f0; position: relative;">
+                <div id="log-lines-wrapper"></div>
+            </div>
+
+            <!-- Mock Terminal Footer/Status Bar -->
+            <div class="terminal-footer d-flex align-items-center justify-content-between px-3 py-2" style="background-color: #1e293b; font-family: monospace; font-size: 11px; color: #94a3b8; border-top: 1px solid #334155;">
+                <div>
+                    <span class="text-success"><i class="fa-solid fa-circle-check me-1"></i> Live Connection Ready</span>
+                </div>
+                <div>
+                    <span>Selected: <span id="visible-lines">0</span>/<span id="total-lines">0</span> lines</span>
+                </div>
+                <div>
+                    <span>Updated: <span id="last-updated-time">Never</span></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Styling elements inside logs */
+    .log-line {
+        padding: 2px 6px;
+        border-radius: 3px;
+        white-space: pre-wrap;
+        word-break: break-all;
+        transition: background-color 0.1s ease;
+    }
+    
+    .log-line:hover {
+        background-color: #1e293b;
+    }
+    
+    .log-continuation {
+        padding-left: 28px;
+        color: #94a3b8;
+    }
+
+    .log-time {
+        color: #64748b;
+        font-weight: 500;
+    }
+    
+    /* Levels colors */
+    .log-info {
+        border-left: 3px solid #0284c7;
+    }
+    .badge-info {
+        color: #38bdf8;
+        font-weight: 600;
+        margin: 0 4px;
+    }
+
+    .log-warning {
+        border-left: 3px solid #d97706;
+        background-color: rgba(217, 119, 6, 0.05);
+    }
+    .badge-warning {
+        color: #fbbf24;
+        font-weight: 600;
+        margin: 0 4px;
+    }
+
+    .log-error {
+        border-left: 3px solid #dc2626;
+        background-color: rgba(220, 38, 38, 0.08);
+    }
+    .badge-error {
+        color: #f87171;
+        font-weight: 600;
+        margin: 0 4px;
+    }
+
+    /* Custom Terminal scrollbar styling */
+    #log-display-container::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+    #log-display-container::-webkit-scrollbar-track {
+        background: #0f172a;
+    }
+    #log-display-container::-webkit-scrollbar-thumb {
+        background: #334155;
+        border-radius: 5px;
+    }
+    #log-display-container::-webkit-scrollbar-thumb:hover {
+        background: #475569;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            let rawLogData = `@Html.Raw(JavaScriptEncoder.Default.Encode(Model ?? ""))`;
+            let activeFilter = 'all';
+            let searchQuery = '';
+
+            // Initialize rendering
+            renderLogs(rawLogData);
+
+            // Refresh logs event
+            $('#btn-refresh').click(function () {
+                refreshLogs();
+            });
+
+            // Copy logs to clipboard
+            $('#btn-copy').click(function () {
+                if (!rawLogData) {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'No logs to copy',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000
+                    });
+                    return;
+                }
+                navigator.clipboard.writeText(rawLogData).then(function() {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Logs copied to clipboard',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000
+                    });
+                }, function() {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Failed to copy logs',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000
+                    });
+                });
+            });
+
+            // Scroll to bottom manually
+            $('#btn-bottom').click(function () {
+                scrollToBottom(true);
+            });
+
+            // Filter button events
+            $('.filter-btn').click(function () {
+                $('.filter-btn').removeClass('active');
+                $(this).addClass('active');
+                activeFilter = $(this).data('filter');
+                applyFilterAndSearch();
+            });
+
+            // Search query event
+            $('#log-search').on('input', function () {
+                searchQuery = $(this).val().toLowerCase();
+                applyFilterAndSearch();
+            });
+
+            function refreshLogs() {
+                const icon = $('#refresh-icon');
+                icon.addClass('fa-spin');
+                
+                $.ajax({
+                    url: '/Admin/GetTodayLogsJson',
+                    type: 'GET',
+                    success: function (res) {
+                        icon.removeClass('fa-spin');
+                        if (res.success) {
+                            rawLogData = res.logs;
+                            renderLogs(rawLogData);
+                            
+                            const Toast = Swal.mixin({
+                                toast: true,
+                                position: 'top-end',
+                                showConfirmButton: false,
+                                timer: 2000,
+                                timerProgressBar: true
+                            });
+                            Toast.fire({
+                                icon: 'success',
+                                title: 'Logs refreshed successfully'
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Failed to refresh logs',
+                                text: res.message
+                            });
+                        }
+                    },
+                    error: function (err) {
+                        icon.removeClass('fa-spin');
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error contacting server',
+                            text: 'An error occurred while fetching log updates.'
+                        });
+                    }
+                });
+            }
+
+            function renderLogs(logsText) {
+                const container = $('#log-lines-wrapper');
+                container.empty();
+
+                if (!logsText || logsText.trim() === '') {
+                    container.html('<div class="text-center text-muted py-5"><i class="fa-solid fa-circle-check text-success fs-3 mb-2 d-block"></i>No log entries captured yet today.</div>');
+                    updateStatusBar(0, 0);
+                    return;
+                }
+
+                const lines = logsText.split('\n');
+                let parsedHtml = '';
+                let currentLevel = 'info';
+                
+                let infoCount = 0;
+                let warnCount = 0;
+                let errCount = 0;
+                let totalLines = 0;
+
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i];
+                    if (!line) continue;
+                    
+                    totalLines++;
+
+                    // Match date stamp: "2026-08-22 15:16:06.422 +05:30 [WRN] Message..."
+                    const dateMatch = line.match(/^(\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}\.\d{3}\s[+-]\d{2}:\d{2})\s+\[(\w+)\]/);
+                    if (dateMatch) {
+                        const timestamp = dateMatch[1];
+                        const levelSymbol = dateMatch[2];
+
+                        if (levelSymbol === 'WRN') {
+                            currentLevel = 'warning';
+                            warnCount++;
+                        } else if (levelSymbol === 'ERR' || levelSymbol === 'FTL') {
+                            currentLevel = 'error';
+                            errCount++;
+                        } else {
+                            currentLevel = 'info';
+                            infoCount++;
+                        }
+
+                        const msg = line.substring(dateMatch[0].length);
+                        parsedHtml += `<div class="log-line log-${currentLevel}" data-level="${currentLevel}">` +
+                                      `<span class="log-time">${timestamp}</span>` +
+                                      `<span class="badge-${currentLevel}"> [${levelSymbol}]</span>` +
+                                      `<span class="log-msg-text">${escapeHtml(msg)}</span>` +
+                                      `</div>`;
+                    } else {
+                        // Continuation line
+                        parsedHtml += `<div class="log-line log-${currentLevel} log-continuation" data-level="${currentLevel}">` +
+                                      `<span class="log-msg-text">${escapeHtml(line)}</span>` +
+                                      `</div>`;
+                    }
+                }
+
+                container.html(parsedHtml);
+                
+                // Update counters
+                $('#count-all').text(totalLines);
+                $('#count-info').text(infoCount);
+                $('#count-warn').text(warnCount);
+                $('#count-error').text(errCount);
+
+                // Set visible count and last updated
+                applyFilterAndSearch();
+                
+                const now = new Date();
+                $('#last-updated-time').text(now.toLocaleTimeString());
+                
+                // Auto scroll
+                if ($('#switch-autoscroll').is(':checked')) {
+                    scrollToBottom(false);
+                }
+            }
+
+            function applyFilterAndSearch() {
+                let visibleCount = 0;
+                let totalCount = 0;
+
+                $('.log-line').each(function () {
+                    totalCount++;
+                    const line = $(this);
+                    const level = line.data('level');
+                    const text = line.text().toLowerCase();
+
+                    const matchesFilter = (activeFilter === 'all' || level === activeFilter);
+                    const matchesSearch = (!searchQuery || text.includes(searchQuery));
+
+                    if (matchesFilter && matchesSearch) {
+                        line.show();
+                        visibleCount++;
+                    } else {
+                        line.hide();
+                    }
+                });
+
+                updateStatusBar(visibleCount, totalCount);
+            }
+
+            function updateStatusBar(visible, total) {
+                $('#visible-lines').text(visible);
+                $('#total-lines').text(total);
+            }
+
+            function scrollToBottom(smooth) {
+                const container = $('#log-display-container');
+                const scrollHeight = container[0].scrollHeight;
+                if (smooth) {
+                    container.animate({ scrollTop: scrollHeight }, 300);
+                } else {
+                    container.scrollTop(scrollHeight);
+                }
+            }
+
+            function escapeHtml(text) {
+                return text
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+        });
+    </script>
+}

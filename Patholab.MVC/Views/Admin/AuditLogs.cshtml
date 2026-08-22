@@ -1,0 +1,57 @@
+@model Patholab.Shared.Models.PagedResult<Patholab.Shared.DTOs.AuditLogDto>
+@{
+    ViewData["Title"] = "Security Operation Logs";
+    var search = ViewBag.Search as string;
+}
+
+<div class="card-custom border-0 shadow-sm">
+    <div class="card-custom-header">
+        <h5 class="card-custom-title"><i class="fa-solid fa-clock-rotate-left text-primary"></i> Clinical & Security Audit Trail</h5>
+    </div>
+
+    <div class="card-custom-body">
+        <form action="/Admin/AuditLogs" method="get" class="mb-4">
+            <div class="row g-2">
+                <div class="col-md-5">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
+                        <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Search by user, action, or table..." value="@search" />
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-light border w-100">Filter Logs</button>
+                </div>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle table-custom m-0" style="font-size: 13px;">
+                <thead>
+                    <tr>
+                        <th class="ps-3">Stamp</th>
+                        <th>User Account</th>
+                        <th>Action</th>
+                        <th>Entity affected</th>
+                        <th>Before & After States (Audit values)</th>
+                        <th class="pe-3">IP Address</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var log in Model.Items)
+                    {
+                        <tr>
+                            <td class="ps-3">@log.CreatedOn.ToString("dd-MMM-yyyy hh:mm:ss tt")</td>
+                            <td><span class="badge bg-secondary">@log.Username</span></td>
+                            <td class="fw-bold">@log.Action</td>
+                            <td>@log.TableName</td>
+                            <td style="max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                <span class="text-muted" style="font-family: monospace; font-size: 11px;">Old: @log.OldValues | New: @log.NewValues</span>
+                            </td>
+                            <td class="pe-3 text-muted">@log.IPAddress</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
