@@ -56,5 +56,13 @@ namespace Patholab.Shared.DTOs
         public string PaymentMode { get; set; } = string.Empty; // Cash, UPI, Card, etc.
         public string? TransactionReference { get; set; }
         public string? Remarks { get; set; }
+        public List<CustomRateItem>? CustomRates { get; set; }
+    }
+
+    public class CustomRateItem
+    {
+        public int? TestId { get; set; }
+        public int? PackageId { get; set; }
+        public decimal Rate { get; set; }
     }
 }

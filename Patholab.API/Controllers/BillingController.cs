@@ -66,6 +66,26 @@ namespace Patholab.API.Controllers
             }
         }
 
+        [HttpPut("invoices/{id}/discount")]
+        [HasPermission("BILLING_PAY")]
+        public async Task<ActionResult<ApiResponse>> UpdateDiscount(int id, [FromBody] UpdateDiscountPayload payload, CancellationToken cancellationToken)
+        {
+            try
+            {
+                await _billingService.UpdateInvoiceDiscountAsync(id, payload.DiscountAmount, cancellationToken);
+                return Ok(ApiResponse.CreateSuccess("Discount updated successfully."));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponse.CreateError(ex.Message));
+            }
+        }
+
+        public class UpdateDiscountPayload
+        {
+            public decimal DiscountAmount { get; set; }
+        }
+
         [HttpGet("payments")]
         [HasPermission("BILLING_VIEW")]
         public async Task<ActionResult<ApiResponse<PagedResult<PaymentDto>>>> GetPayments(

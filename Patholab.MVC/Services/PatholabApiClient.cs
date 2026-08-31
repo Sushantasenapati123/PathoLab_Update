@@ -418,6 +418,13 @@ namespace Patholab.MVC.Services
             return await HandleResponse<ReportDto>(response);
         }
 
+        public async Task<ReportDto> GetReportByOrderIdAsync(int orderId)
+        {
+            AddAuthHeader();
+            var response = await _client.GetAsync($"api/reports/order/{orderId}");
+            return await HandleResponse<ReportDto>(response);
+        }
+
         public async Task<ReportDto> VerifyReportAsync(int id, string? remarks)
         {
             AddAuthHeader();
@@ -467,6 +474,13 @@ namespace Patholab.MVC.Services
             AddAuthHeader();
             var response = await _client.GetAsync($"api/billing/invoices/{id}");
             return await HandleResponse<InvoiceDto>(response);
+        }
+
+        public async Task UpdateInvoiceDiscountAsync(int invoiceId, decimal discountAmount)
+        {
+            AddAuthHeader();
+            var response = await _client.PutAsJsonAsync($"api/billing/invoices/{invoiceId}/discount", new { DiscountAmount = discountAmount });
+            await HandleResponse(response);
         }
 
         public async Task<PaymentDto> CollectPaymentAsync(CreatePaymentRequest request)

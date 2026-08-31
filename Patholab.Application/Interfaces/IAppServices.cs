@@ -74,6 +74,7 @@ namespace Patholab.Application.Interfaces
     public interface IReportService
     {
         Task<ReportDto> GetReportByIdAsync(int id, CancellationToken cancellationToken = default);
+        Task<ReportDto> GetReportByOrderIdAsync(int orderId, CancellationToken cancellationToken = default);
         Task<ReportDto> VerifyReportAsync(int reportId, int verifiedById, string? remarks, CancellationToken cancellationToken = default);
         Task<ReportDto> PublishReportAsync(int reportId, int publishedById, CancellationToken cancellationToken = default);
         Task<ReportVerificationResponse> VerifyPublicReportAsync(string reportNumber, CancellationToken cancellationToken = default);
@@ -87,6 +88,7 @@ namespace Patholab.Application.Interfaces
         Task<PagedResult<InvoiceDto>> GetInvoicesPagedAsync(int pageNumber, int pageSize, string? search, CancellationToken cancellationToken = default);
         Task<PaymentDto> CollectPaymentAsync(CreatePaymentRequest request, string receivedBy, CancellationToken cancellationToken = default);
         Task<PagedResult<PaymentDto>> GetPaymentsPagedAsync(int pageNumber, int pageSize, string? search, CancellationToken cancellationToken = default);
+        Task UpdateInvoiceDiscountAsync(int invoiceId, decimal discountAmount, CancellationToken cancellationToken = default);
     }
 
     public interface IHomeCollectionService
