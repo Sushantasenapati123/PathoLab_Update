@@ -21,6 +21,7 @@ namespace Patholab.Application.Services
         public ReportService(IApplicationDbContext context, IPdfGenerator pdfGenerator, IFileStorageService fileStorageService)
         {
             _context = context;
+
             _pdfGenerator = pdfGenerator;
             _fileStorageService = fileStorageService;
         }
