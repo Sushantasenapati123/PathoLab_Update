@@ -5,6 +5,7 @@ using Patholab.Application.Interfaces;
 using Patholab.Infrastructure.Persistence;
 using Patholab.Infrastructure.Services;
 using Patholab.Infrastructure.Pdf;
+using Biwen.EFCore.UseRowNumberForPaging;
 
 namespace Patholab.Infrastructure
 {
@@ -17,7 +18,9 @@ namespace Patholab.Infrastructure
                 ?? "Server=(localdb)\\mssqllocaldb;Database=PatholabDB;Trusted_Connection=True;MultipleActiveResultSets=true";
 
             services.AddDbContext<PatholabDbContext>(options =>
-                options.UseSqlServer(connectionString, b => b.MigrationsAssembly("Patholab.Infrastructure")));
+                options.UseSqlServer(connectionString, b => b
+                    .MigrationsAssembly("Patholab.Infrastructure")
+                    .UseRowNumberForPaging()));
 
             // Map IApplicationDbContext to PatholabDbContext
             services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<PatholabDbContext>());

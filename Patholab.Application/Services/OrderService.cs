@@ -51,12 +51,21 @@ namespace Patholab.Application.Services
 
                     foreach (var test in tests)
                     {
-                        grossAmount += test.Price;
+                        var rate = test.Price;
+                        if (request.CustomRates != null)
+                        {
+                            var customRate = request.CustomRates.FirstOrDefault(r => r.TestId == test.Id);
+                            if (customRate != null)
+                            {
+                                rate = customRate.Rate;
+                            }
+                        }
+                        grossAmount += rate;
                         orderDetailsList.Add(new OrderDetail
                         {
                             TestId = test.Id,
-                            Rate = test.Price,
-                            Amount = test.Price,
+                            Rate = rate,
+                            Amount = rate,
                             Quantity = 1,
                             SampleRequired = true,
                             Status = "Pending",
@@ -77,12 +86,21 @@ namespace Patholab.Application.Services
 
                     foreach (var pack in packages)
                     {
-                        grossAmount += pack.PackagePrice;
+                        var rate = pack.PackagePrice;
+                        if (request.CustomRates != null)
+                        {
+                            var customRate = request.CustomRates.FirstOrDefault(r => r.PackageId == pack.Id);
+                            if (customRate != null)
+                            {
+                                rate = customRate.Rate;
+                            }
+                        }
+                        grossAmount += rate;
                         orderDetailsList.Add(new OrderDetail
                         {
                             PackageId = pack.Id,
-                            Rate = pack.PackagePrice,
-                            Amount = pack.PackagePrice,
+                            Rate = rate,
+                            Amount = rate,
                             Quantity = 1,
                             SampleRequired = true,
                             Status = "Pending",
