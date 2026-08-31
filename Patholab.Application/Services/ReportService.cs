@@ -39,6 +39,20 @@ namespace Patholab.Application.Services
             return MapToDto(r);
         }
 
+        public async Task<ReportDto> GetReportByOrderIdAsync(int orderId, CancellationToken cancellationToken = default)
+        {
+            var r = await _context.Reports
+                .Include(x => x.Order)
+                .ThenInclude(o => o.Doctor)
+                .Include(x => x.Patient)
+                .Include(x => x.ReportDetails)
+                .Include(x => x.VerifiedBy)
+                .FirstOrDefaultAsync(x => x.OrderId == orderId && !x.DeletedFlag, cancellationToken);
+
+            if (r == null) throw new Exception("Report not found for this order.");
+            return MapToDto(r);
+        }
+
         public async Task<PagedResult<ReportDto>> GetReportsPagedAsync(int pageNumber, int pageSize, string? search, CancellationToken cancellationToken = default)
         {
             var query = _context.Reports

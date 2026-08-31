@@ -58,6 +58,20 @@ namespace Patholab.API.Controllers
             }
         }
 
+        [HttpGet("order/{orderId}")]
+        public async Task<ActionResult<ApiResponse<ReportDto>>> GetByOrderId(int orderId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var report = await _reportService.GetReportByOrderIdAsync(orderId, cancellationToken);
+                return Ok(ApiResponse<ReportDto>.CreateSuccess(report));
+            }
+            catch (Exception ex)
+            {
+                return NotFound(ApiResponse.CreateError(ex.Message));
+            }
+        }
+
         [HttpPost("{id}/verify")]
         [HasPermission("REPORTS_VERIFY")]
         public async Task<ActionResult<ApiResponse<ReportDto>>> Verify(int id, [FromBody] VerifyReportPayload payload, CancellationToken cancellationToken)

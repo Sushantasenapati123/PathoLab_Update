@@ -3,7 +3,7 @@ using System;
 namespace Patholab.Domain.Entities
 {
     public class AuditLog
-    {
+    {//Sushanta
         public int Id { get; set; }
         public int? UserId { get; set; }
         public virtual User? User { get; set; }

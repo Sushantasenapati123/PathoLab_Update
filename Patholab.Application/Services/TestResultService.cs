@@ -119,6 +119,9 @@ namespace Patholab.Application.Services
                 .Include(r => r.TestParameter)
                 .Include(r => r.EnteredBy)
                 .Include(r => r.VerifiedBy)
+                .Include(r => r.SampleTest)
+                    .ThenInclude(st => st.Test)
+                        .ThenInclude(t => t.SampleType)
                 .Where(r => r.SampleTest.SampleId == sampleId)
                 .OrderBy(r => r.TestParameter.DisplayOrder)
                 .ToListAsync(cancellationToken);
@@ -141,6 +144,7 @@ namespace Patholab.Application.Services
                 IsCritical = r.IsCritical,
                 EnteredByName = r.EnteredBy?.FullName,
                 EnteredOn = r.EnteredOn,
+                Specimen = r.SampleTest.Test.SampleType.SampleTypeName,
                 VerifiedByName = r.VerifiedBy?.FullName,
                 VerifiedOn = r.VerifiedOn
             }).ToList();

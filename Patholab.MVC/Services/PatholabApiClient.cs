@@ -19,10 +19,11 @@ namespace Patholab.MVC.Services
         private readonly HttpClient _client;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public PatholabApiClient(HttpClient client, IHttpContextAccessor httpContextAccessor)
+        public PatholabApiClient(HttpClient client, IHttpContextAccessor httpContextAccessor, Microsoft.Extensions.Configuration.IConfiguration configuration)
         {
             _client = client;
-            _client.BaseAddress = new Uri("https://localhost:7198/"); // API Base address, can be adjusted in appsettings.json
+            var baseUrl = configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7198/";
+            _client.BaseAddress = new Uri(baseUrl);
             _httpContextAccessor = httpContextAccessor;
         }
 
@@ -417,6 +418,13 @@ namespace Patholab.MVC.Services
             return await HandleResponse<ReportDto>(response);
         }
 
+        public async Task<ReportDto> GetReportByOrderIdAsync(int orderId)
+        {
+            AddAuthHeader();
+            var response = await _client.GetAsync($"api/reports/order/{orderId}");
+            return await HandleResponse<ReportDto>(response);
+        }
+
         public async Task<ReportDto> VerifyReportAsync(int id, string? remarks)
         {
             AddAuthHeader();
@@ -466,6 +474,13 @@ namespace Patholab.MVC.Services
             AddAuthHeader();
             var response = await _client.GetAsync($"api/billing/invoices/{id}");
             return await HandleResponse<InvoiceDto>(response);
+        }
+
+        public async Task UpdateInvoiceDiscountAsync(int invoiceId, decimal discountAmount)
+        {
+            AddAuthHeader();
+            var response = await _client.PutAsJsonAsync($"api/billing/invoices/{invoiceId}/discount", new { DiscountAmount = discountAmount });
+            await HandleResponse(response);
         }
 
         public async Task<PaymentDto> CollectPaymentAsync(CreatePaymentRequest request)
