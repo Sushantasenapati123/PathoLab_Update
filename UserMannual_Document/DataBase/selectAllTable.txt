@@ -1,0 +1,41 @@
+USE [RWD];
+GO
+
+-- Master Staff & Security Configurations
+SELECT * FROM [PTH_Roles];
+SELECT * FROM [PTH_Users];
+SELECT * FROM [PTH_Permissions];
+SELECT * FROM [PTH_RolePermissions];
+
+-- Diagnostic Configurations
+SELECT * FROM [PTH_Departments];
+SELECT * FROM [PTH_SampleTypes];
+SELECT * FROM [PTH_Tests];
+SELECT * FROM [PTH_TestParameters];
+SELECT * FROM [PTH_TestPackages];
+SELECT * FROM [PTH_PackageTests];
+
+-- Patient & Doctor Directories
+SELECT * FROM [PTH_Patients];
+SELECT * FROM [PTH_Doctors];
+
+-- Invoicing & Payments
+SELECT * FROM [PTH_Orders];
+SELECT * FROM [PTH_OrderDetails];
+SELECT * FROM [PTH_Invoices];
+SELECT * FROM [PTH_Payments];
+
+-- Laboratory Specimen Operations
+SELECT * FROM [PTH_Samples];
+SELECT * FROM [PTH_SampleTests];
+SELECT * FROM [PTH_TestResults];
+
+-- Pathologist Approvals & Verifications
+SELECT * FROM [PTH_Reports];
+SELECT * FROM [PTH_ReportDetails];
+
+-- Operational Logs & Dispatches
+SELECT * FROM [PTH_HomeCollections];
+SELECT * FROM [PTH_AuditLogs];
+SELECT * FROM [PTH_Notifications];
+GO

@@ -22,6 +22,7 @@ namespace Patholab.Shared.DTOs
         public bool IsCritical { get; set; }
         public string? EnteredByName { get; set; }
         public DateTime? EnteredOn { get; set; }
+        public string? Specimen { get; set; }
         public string? VerifiedByName { get; set; }
         public DateTime? VerifiedOn { get; set; }
     }

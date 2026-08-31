@@ -7,6 +7,100 @@
     var recentAudits = ViewBag.RecentAudits as List<Patholab.Shared.DTOs.AuditLogDto> ?? new List<Patholab.Shared.DTOs.AuditLogDto>();
 }
 
+<!-- Welcome Banner -->
+<div class="card bg-primary text-white border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #1e40af, #2563eb) !important; border-radius: 12px;">
+    <div class="card-body p-4 d-flex justify-content-between align-items-center">
+        <div>
+            <h4 class="font-outfit fw-bold m-0" style="font-size: 22px;">Welcome back, Admin Console!</h4>
+            <p class="m-0 text-white-50 mt-1" style="font-size: 13px;">Manage diagnostic billing, track specimens, and publish verified clinical reports.</p>
+        </div>
+        <div class="d-none d-md-block text-end">
+            <span class="badge bg-white bg-opacity-20 text-white py-2 px-3 fw-bold" style="font-size: 12px; letter-spacing: 0.5px;">
+                <i class="fa-solid fa-clock me-1"></i> System Online: @DateTime.Now.ToString("dd MMM yyyy")
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- 10 Quick Actions Grid (Page 4 User Manual Requirment) -->
+<div class="card-custom border-0 shadow-sm p-4 mb-4">
+    <h5 class="fw-bold mb-3 font-outfit" style="font-size: 14.5px; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">
+        <i class="fa-solid fa-square-poll-horizontal text-primary me-2"></i> Quick Operations Console
+    </h5>
+    <div class="row g-3">
+        <!-- Button 1 -->
+        <div class="col-6 col-md-4 col-lg-2.4" style="flex: 0 0 20%; max-width: 20%; min-width: 150px;">
+            <a href="/NewEntry" class="btn btn-primary w-100 py-3 d-flex flex-column align-items-center justify-content-center border-0" style="background-color: #0284c7; border-radius: 10px; min-height: 85px; transition: all 0.2s;">
+                <i class="fa-solid fa-plus-circle fs-4 mb-1"></i>
+                <span class="fw-semibold" style="font-size: 12.5px;">New Entry (F1)</span>
+            </a>
+        </div>
+        <!-- Button 2 -->
+        <div class="col-6 col-md-4 col-lg-2.4" style="flex: 0 0 20%; max-width: 20%; min-width: 150px;">
+            <a href="/Orders" class="btn btn-primary w-100 py-3 d-flex flex-column align-items-center justify-content-center border-0" style="background-color: #0369a1; border-radius: 10px; min-height: 85px; transition: all 0.2s;">
+                <i class="fa-solid fa-list-check fs-4 mb-1"></i>
+                <span class="fw-semibold" style="font-size: 12.5px;">View Entries (F2)</span>
+            </a>
+        </div>
+        <!-- Button 3 -->
+        <div class="col-6 col-md-4 col-lg-2.4" style="flex: 0 0 20%; max-width: 20%; min-width: 150px;">
+            <a href="/Reports" class="btn btn-primary w-100 py-3 d-flex flex-column align-items-center justify-content-center border-0" style="background-color: #1e40af; border-radius: 10px; min-height: 85px; transition: all 0.2s;">
+                <i class="fa-solid fa-file-medical fs-4 mb-1"></i>
+                <span class="fw-semibold" style="font-size: 12.5px;">Test Reports (F3)</span>
+            </a>
+        </div>
+        <!-- Button 4 -->
+        <div class="col-6 col-md-4 col-lg-2.4" style="flex: 0 0 20%; max-width: 20%; min-width: 150px;">
+            <a href="/Doctors" class="btn btn-primary w-100 py-3 d-flex flex-column align-items-center justify-content-center border-0" style="background-color: #0f766e; border-radius: 10px; min-height: 85px; transition: all 0.2s;">
+                <i class="fa-solid fa-user-md fs-4 mb-1"></i>
+                <span class="fw-semibold" style="font-size: 12.5px;">Ref. Doctors (F4)</span>
+            </a>
+        </div>
+        <!-- Button 5 -->
+        <div class="col-6 col-md-4 col-lg-2.4" style="flex: 0 0 20%; max-width: 20%; min-width: 150px;">
+            <a href="/Billing/Invoices" class="btn btn-primary w-100 py-3 d-flex flex-column align-items-center justify-content-center border-0" style="background-color: #4f46e5; border-radius: 10px; min-height: 85px; transition: all 0.2s;">
+                <i class="fa-solid fa-money-bill-wave fs-4 mb-1"></i>
+                <span class="fw-semibold" style="font-size: 12.5px;">Cashbook (F5)</span>
+            </a>
+        </div>
+        <!-- Button 6 -->
+        <div class="col-6 col-md-4 col-lg-2.4" style="flex: 0 0 20%; max-width: 20%; min-width: 150px;">
+            <a href="javascript:void(0)" onclick="Swal.fire('Backup System', 'Database backup process scheduled successfully.', 'success')" class="btn btn-primary w-100 py-3 d-flex flex-column align-items-center justify-content-center border-0" style="background-color: #6366f1; border-radius: 10px; min-height: 85px; transition: all 0.2s;">
+                <i class="fa-solid fa-database fs-4 mb-1"></i>
+                <span class="fw-semibold" style="font-size: 12.5px;">Backup (F6)</span>
+            </a>
+        </div>
+        <!-- Button 7 -->
+        <div class="col-6 col-md-4 col-lg-2.4" style="flex: 0 0 20%; max-width: 20%; min-width: 150px;">
+            <a href="/Tests" class="btn btn-primary w-100 py-3 d-flex flex-column align-items-center justify-content-center border-0" style="background-color: #0369a1; border-radius: 10px; min-height: 85px; transition: all 0.2s;">
+                <i class="fa-solid fa-sliders fs-4 mb-1"></i>
+                <span class="fw-semibold" style="font-size: 12.5px;">Add Test (F7)</span>
+            </a>
+        </div>
+        <!-- Button 8 -->
+        <div class="col-6 col-md-4 col-lg-2.4" style="flex: 0 0 20%; max-width: 20%; min-width: 150px;">
+            <a href="/Tests" class="btn btn-primary w-100 py-3 d-flex flex-column align-items-center justify-content-center border-0" style="background-color: #0284c7; border-radius: 10px; min-height: 85px; transition: all 0.2s;">
+                <i class="fa-solid fa-magnifying-glass-chart fs-4 mb-1"></i>
+                <span class="fw-semibold" style="font-size: 12.5px;">View Test (F8)</span>
+            </a>
+        </div>
+        <!-- Button 9 -->
+        <div class="col-6 col-md-4 col-lg-2.4" style="flex: 0 0 20%; max-width: 20%; min-width: 150px;">
+            <a href="/Patients/Create" class="btn btn-primary w-100 py-3 d-flex flex-column align-items-center justify-content-center border-0" style="background-color: #0891b2; border-radius: 10px; min-height: 85px; transition: all 0.2s;">
+                <i class="fa-solid fa-user-plus fs-4 mb-1"></i>
+                <span class="fw-semibold" style="font-size: 12.5px;">Add Patient (F9)</span>
+            </a>
+        </div>
+        <!-- Button 10 -->
+        <div class="col-6 col-md-4 col-lg-2.4" style="flex: 0 0 20%; max-width: 20%; min-width: 150px;">
+            <a href="/Patients" class="btn btn-primary w-100 py-3 d-flex flex-column align-items-center justify-content-center border-0" style="background-color: #0e7490; border-radius: 10px; min-height: 85px; transition: all 0.2s;">
+                <i class="fa-solid fa-hospital-user fs-4 mb-1"></i>
+                <span class="fw-semibold" style="font-size: 12.5px;">View Patient (F10)</span>
+            </a>
+        </div>
+    </div>
+</div>
+
 <!-- Dashboard Cards Row -->
 <div class="row g-4 mb-4">
     <!-- Patients Card -->

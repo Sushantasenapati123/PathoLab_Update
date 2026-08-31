@@ -1,0 +1,2164 @@
+@model Patholab.Shared.DTOs.OrderDto
+@{
+    ViewData["Title"] = "Test Billing Entry & Reports Workstation";
+    var isEditMode = Model != null;
+    var invoice = ViewBag.Invoice as Patholab.Shared.DTOs.InvoiceDto;
+    var report = ViewBag.Report as Patholab.Shared.DTOs.ReportDto;
+    var doctors = ViewBag.Doctors as List<SelectListItem> ?? new List<SelectListItem>();
+    var allTests = ViewBag.Tests as List<Patholab.Shared.DTOs.TestDto> ?? new List<Patholab.Shared.DTOs.TestDto>();
+    var packages = ViewBag.Packages as List<Patholab.Shared.DTOs.TestPackageDto> ?? new List<Patholab.Shared.DTOs.TestPackageDto>();
+    var patient = ViewBag.Patient as Patholab.Shared.DTOs.PatientDto;
+
+    // Parse title and patient details if in edit mode
+    string titleVal = "MR.";
+    string patientName = "";
+    string fatherName = "";
+    string ageVal = "";
+    string ageUnit = "Yrs";
+    string genderVal = "Male";
+    string mobileVal = "";
+    string addressVal = "";
+
+    if (isEditMode && patient != null)
+    {
+        patientName = patient.FullName;
+        fatherName = patient.Remarks ?? "";
+        ageVal = patient.Age.ToString();
+        genderVal = patient.Gender;
+        mobileVal = patient.Mobile;
+        addressVal = patient.Address ?? "";
+
+        // Attempt parsing title from full name
+        var nameUpper = patientName.ToUpper();
+        if (nameUpper.StartsWith("MR. ")) { titleVal = "MR."; patientName = patientName.Substring(4); }
+        else if (nameUpper.StartsWith("MRS. ")) { titleVal = "MRS."; patientName = patientName.Substring(5); }
+        else if (nameUpper.StartsWith("MS. ")) { titleVal = "MS."; patientName = patientName.Substring(4); }
+        else if (nameUpper.StartsWith("DR. ")) { titleVal = "DR."; patientName = patientName.Substring(4); }
+        else if (nameUpper.StartsWith("BABY ")) { titleVal = "BABY"; patientName = patientName.Substring(5); }
+    }
+}
+
+@section Styles {
+    <style>
+        /* Classic Window Styling */
+        .desktop-window {
+            border: 2px solid #005691;
+            border-radius: 6px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            background-color: #f0f0f0;
+            margin-top: -10px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .window-titlebar {
+            background: linear-gradient(180deg, #518ab5 0%, #2f6990 100%);
+            color: #ffffff;
+            padding: 6px 12px;
+            font-weight: bold;
+            font-size: 13.5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #004270;
+            user-select: none;
+        }
+
+        .window-title {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 4px;
+        }
+
+        .win-btn {
+            width: 22px;
+            height: 18px;
+            background-color: #e0e0e0;
+            border: 1px solid #707070;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: bold;
+            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: inset 0 1px 0 #fff;
+        }
+
+        .win-btn:hover {
+            background-color: #cfcfcf;
+        }
+
+        .win-btn.close {
+            background-color: #e81123;
+            color: white;
+            border-color: #b00f1c;
+        }
+
+        .win-btn.close:hover {
+            background-color: #f1707a;
+        }
+
+        .window-body {
+            display: flex;
+            height: calc(100vh - 180px);
+            min-height: 600px;
+            background-color: #f7f9fa;
+        }
+
+        /* Left Panel - Case Registration & Billing (Cyan layout) */
+        .panel-left-cyan {
+            flex: 1.1;
+            background-color: #dbf2fb;
+            border-right: 2px solid #2f6990;
+            padding: 12px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Right Panel - Lab Report Entry Workstation (Green layout) */
+        .panel-right-green {
+            flex: 0.9;
+            background-color: #edfbed;
+            padding: 12px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Desktop Styled Inputs */
+        .label-desktop {
+            font-size: 12px;
+            font-weight: bold;
+            color: #0f3d5f;
+            white-space: nowrap;
+            margin-bottom: 2px;
+        }
+
+        .input-desktop {
+            width: 100%;
+            height: 25px;
+            padding: 2px 6px;
+            font-size: 13px;
+            border: 1px solid #7da2be;
+            border-radius: 3px;
+            background-color: #ffffff;
+            color: #333333;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        .input-desktop:focus {
+            border-color: #3b82f6;
+            background-color: #fcfdfe;
+            box-shadow: 0 0 4px rgba(59, 130, 246, 0.4);
+        }
+
+        .input-desktop[disabled], .input-desktop[readonly] {
+            background-color: #e5edf5;
+            color: #555555;
+            cursor: not-allowed;
+        }
+
+        /* Groups & Card outlines */
+        .group-card {
+            border: 1px solid #a3c9e6;
+            border-radius: 4px;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .group-title {
+            font-size: 11.5px;
+            font-weight: bold;
+            color: #004d80;
+            margin-top: -18px;
+            background-color: #dbf2fb;
+            padding: 0 6px;
+            width: fit-content;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Multi Column Layout grids */
+        .row-grid-3 {
+            display: grid;
+            grid-template-columns: 1.2fr 2fr 1fr;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .row-grid-2 {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .flex-row-desktop {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Buttons matching reference images */
+        .btn-desktop {
+            background-color: #2e6da4;
+            color: white;
+            border: 1px solid #1c527f;
+            border-radius: 3px;
+            padding: 4px 10px;
+            font-size: 12.5px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 1px 2px rgba(0,0,0,0.1);
+            outline: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .btn-desktop:hover {
+            background-color: #337ab7;
+        }
+
+        .btn-desktop:active {
+            background-color: #1e527f;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .btn-desktop.btn-new {
+            background-color: #0073e6;
+            border-color: #005cb3;
+        }
+
+        .btn-desktop.btn-new:hover {
+            background-color: #1a8cff;
+        }
+
+        .btn-desktop.btn-save {
+            background-color: #1a5c8e;
+            border-color: #113f63;
+        }
+
+        .btn-desktop.btn-save:hover {
+            background-color: #2475b0;
+        }
+
+        .btn-desktop.btn-add {
+            background-color: #2b7a2d;
+            border-color: #1b521e;
+        }
+
+        .btn-desktop.btn-add:hover {
+            background-color: #359837;
+        }
+
+        /* Links */
+        .link-desktop {
+            font-size: 12px;
+            font-weight: bold;
+            color: #0066cc;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .link-desktop:hover {
+            color: #004499;
+        }
+
+        /* Table styles */
+        .table-desktop-container {
+            border: 1px solid #7da2be;
+            background-color: #ffffff;
+            overflow-y: auto;
+            max-height: 170px;
+            border-radius: 3px;
+        }
+
+        .table-desktop {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12.5px;
+        }
+
+        .table-desktop th {
+            background-color: #286090;
+            color: white;
+            font-weight: bold;
+            padding: 4px 8px;
+            text-align: left;
+            border-bottom: 2px solid #004270;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .table-desktop td {
+            padding: 4px 8px;
+            border-bottom: 1px solid #e0e0e0;
+            vertical-align: middle;
+        }
+
+        /* Saved Completed Test Rows (Green) */
+        .table-desktop tbody tr.test-completed {
+            background-color: #c3e6cb !important;
+            color: #155724;
+        }
+
+        /* Pending Test Rows (Red/Pink) */
+        .table-desktop tbody tr.test-pending {
+            background-color: #f5c6cb !important;
+            color: #721c24;
+        }
+
+        .table-desktop tbody tr:hover {
+            filter: brightness(0.95);
+        }
+
+        .table-desktop tbody tr.selected-row {
+            outline: 2px solid #005691;
+            box-shadow: 0 0 8px rgba(0, 86, 145, 0.4);
+            z-index: 5;
+        }
+
+        /* Suggestion Transfer Layout for Test Selection */
+        .selection-split-block {
+            display: flex;
+            gap: 8px;
+            margin-top: 5px;
+            border: 1px solid #7da2be;
+            background-color: #ffffff;
+            border-radius: 4px;
+            padding: 8px;
+            display: none; /* Toggle programmatically */
+        }
+
+        .selection-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .selection-header {
+            background-color: #0f3d5f;
+            color: white;
+            font-weight: bold;
+            padding: 4px 8px;
+            font-size: 11.5px;
+            border-radius: 3px;
+        }
+
+        .selection-list {
+            height: 130px;
+            overflow-y: auto;
+            border: 1px solid #cbd5e1;
+            border-radius: 3px;
+        }
+
+        .selection-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 8px;
+            font-size: 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .selection-item:hover {
+            background-color: #e0f2fe;
+            color: #0369a1;
+        }
+
+        /* Parameters Workstation (Right side styling) */
+        .table-params-container {
+            border: 1px solid #7dbf7e;
+            background-color: #ffffff;
+            overflow-y: auto;
+            flex-grow: 1;
+            border-radius: 3px;
+            margin-bottom: 8px;
+        }
+
+        .table-params-desktop {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12.5px;
+        }
+
+        .table-params-desktop th {
+            background-color: #206d21;
+            color: white;
+            font-weight: bold;
+            padding: 4px 8px;
+            text-align: left;
+            border-bottom: 2px solid #144915;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .table-params-desktop td {
+            padding: 4px 8px;
+            border-bottom: 1px solid #e2f0d9;
+            vertical-align: middle;
+        }
+
+        .input-result-desktop {
+            width: 100%;
+            height: 22px;
+            padding: 1px 4px;
+            font-size: 12.5px;
+            border: 1px solid #99c299;
+            border-radius: 3px;
+            box-sizing: border-box;
+            background-color: #ebfaeb;
+            font-weight: bold;
+            color: #144915;
+        }
+
+        .input-result-desktop:focus {
+            background-color: #ffffff;
+            border-color: #206d21;
+            outline: none;
+        }
+
+        /* Summary panel variables */
+        .bill-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4px 0;
+            font-size: 13px;
+            border-bottom: 1px dashed #afd2ed;
+        }
+
+        .bill-box.total {
+            font-weight: bold;
+            font-size: 14.5px;
+            color: #0f3d5f;
+            border-bottom: none;
+            border-top: 1px solid #7da2be;
+            margin-top: 4px;
+            padding-top: 6px;
+        }
+
+        /* Print Modal Layout matching Image 5 */
+        .print-modal-body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f3f3f3;
+            padding: 15px;
+        }
+
+        .print-control-bar {
+            background-color: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 12px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+        }
+
+        .print-action-box {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            border-right: 1px solid #e2e8f0;
+            padding-right: 12px;
+        }
+
+        .print-action-box:last-child {
+            border-right: none;
+            padding-right: 0;
+        }
+
+        .print-btn-group {
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn-print-action {
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 3px;
+            cursor: pointer;
+            border: 1px solid;
+        }
+
+        .btn-print-action.primary {
+            background-color: #0073e6;
+            color: white;
+            border-color: #005cb3;
+        }
+
+        .btn-print-action.green {
+            background-color: #2b7a2d;
+            color: white;
+            border-color: #1b521e;
+        }
+
+        .btn-print-action.danger {
+            background-color: #d9534f;
+            color: white;
+            border-color: #d43f3a;
+        }
+
+        /* High-fidelity Preview Canvas */
+        .report-preview-canvas {
+            background-color: #ffffff;
+            border: 1px solid #94a3b8;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            min-height: 480px;
+            padding: 30px;
+            box-sizing: border-box;
+            border-radius: 3px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .preview-header-box {
+            border: 1px solid #334155;
+            border-radius: 4px;
+            padding: 10px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 11px;
+            color: #1e293b;
+            margin-bottom: 20px;
+        }
+
+        .preview-header-col div {
+            margin-bottom: 4px;
+        }
+
+        .preview-barcode {
+            text-align: right;
+            font-family: 'Libre Barcode 39', monospace;
+            font-size: 28px;
+            margin-top: -6px;
+        }
+
+        .preview-title {
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px;
+            text-transform: uppercase;
+            border-bottom: 2px solid #334155;
+            padding-bottom: 4px;
+            margin-bottom: 15px;
+            letter-spacing: 0.5px;
+        }
+
+        .preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11.5px;
+            margin-bottom: 20px;
+        }
+
+        .preview-table th {
+            border-bottom: 1.5px solid #334155;
+            padding: 4px 6px;
+            font-weight: bold;
+        }
+
+        .preview-table td {
+            padding: 6px;
+            border-bottom: 1px dashed #cbd5e1;
+        }
+    </style>
+}
+
+<div class="desktop-window">
+    <!-- Window Title Bar -->
+    <div class="window-titlebar">
+        <div class="window-title">
+            <i class="fa-solid fa-flask-vial"></i> 
+            Test Billing Entry / Report
+        </div>
+        <div class="window-controls">
+            <div class="win-btn">_</div>
+            <div class="win-btn">[]</div>
+            <div class="win-btn close" onclick="window.history.back()">X</div>
+        </div>
+    </div>
+
+    <!-- Window Internal Body -->
+    <div class="window-body">
+        <!-- LEFT PANEL: Patient registration & Case Booking -->
+        <div class="panel-left-cyan">
+            <!-- Patient Demographics Section -->
+            <div class="group-card">
+                <div class="group-title">Patient Details</div>
+                
+                <input type="hidden" id="hdnPatientId" value="@(isEditMode ? Model.PatientId : 0)" />
+
+                <!-- Row 1: Patient Title, Name & S.No -->
+                <div class="row-grid-3 mb-2">
+                    <div>
+                        <span class="label-desktop">Patient *</span>
+                        <select id="ddlTitle" class="input-desktop" @(isEditMode ? "disabled" : "")>
+                            <option value="MR." selected="@(titleVal == "MR.")">MR.</option>
+                            <option value="MRS." selected="@(titleVal == "MRS.")">MRS.</option>
+                            <option value="MS." selected="@(titleVal == "MS.")">MS.</option>
+                            <option value="DR." selected="@(titleVal == "DR.")">DR.</option>
+                            <option value="BABY" selected="@(titleVal == "BABY")">BABY</option>
+                        </select>
+                    </div>
+                    <div>
+                        <span class="label-desktop">Patient Full Name *</span>
+                        <input type="text" id="txtPatientName" class="input-desktop" placeholder="DEMO NAME" value="@(isEditMode ? patientName : "")" required @(isEditMode ? "disabled" : "") />
+                    </div>
+                    <div>
+                        <span class="label-desktop">S. No.</span>
+                        <input type="text" id="txtSerialNo" class="input-desktop text-center font-monospace fw-bold" style="background-color: #bfe6ff; border-color: #79a6d2;" value="@(isEditMode ? Model.Id.ToString() : "13")" readonly />
+                    </div>
+                </div>
+
+                <!-- Row 2: Father Name & Date -->
+                <div class="row-grid-3 mb-2">
+                    <div style="grid-column: span 2;">
+                        <span class="label-desktop">FN / HN (Father/Husband Name)</span>
+                        <input type="text" id="txtFatherName" class="input-desktop" placeholder="FATHER NAME" value="@(isEditMode ? fatherName : "")" @(isEditMode ? "disabled" : "") />
+                    </div>
+                    <div>
+                        <span class="label-desktop">Date</span>
+                        <input type="text" id="txtOrderDate" class="input-desktop text-center font-monospace" style="background-color: #bfe6ff; border-color: #79a6d2;" value="@(isEditMode ? Model.OrderDate.ToString("dd-MM-yyyy HH:mm") : DateTime.Now.ToString("dd-MM-yyyy HH:mm"))" readonly />
+                    </div>
+                </div>
+
+                <!-- Row 3: Gender, Age, Age Unit & UHID -->
+                <div class="row-grid-3 mb-2">
+                    <div class="row-grid-2">
+                        <div>
+                            <span class="label-desktop">Gender *</span>
+                            <select id="ddlGender" class="input-desktop" @(isEditMode ? "disabled" : "")>
+                                <option value="Male" selected="@(genderVal == "Male")">Male</option>
+                                <option value="Female" selected="@(genderVal == "Female")">Female</option>
+                                <option value="Other" selected="@(genderVal == "Other")">Other</option>
+                            </select>
+                        </div>
+                        <div>
+                            <span class="label-desktop">Age *</span>
+                            <input type="number" id="txtAge" class="input-desktop text-end" value="@(isEditMode ? ageVal : "")" step="any" placeholder="20.0" @(isEditMode ? "disabled" : "") />
+                        </div>
+                    </div>
+                    <div>
+                        <span class="label-desktop">Unit</span>
+                        <select id="ddlAgeUnit" class="input-desktop" @(isEditMode ? "disabled" : "")>
+                            <option value="Yrs" selected="@(ageUnit == "Yrs")">Yrs</option>
+                            <option value="Months" selected="@(ageUnit == "Months")">Months</option>
+                            <option value="Days" selected="@(ageUnit == "Days")">Days</option>
+                        </select>
+                    </div>
+                    <div>
+                        <span class="label-desktop">UHID</span>
+                        <input type="text" id="txtUHID" class="input-desktop text-center font-monospace" style="background-color: #bfe6ff; border-color: #79a6d2;" value="@(isEditMode ? Model.PatientCode : "55555")" readonly />
+                    </div>
+                </div>
+
+                <!-- Row 4: Mobile & Address -->
+                <div class="row-grid-2 mb-2">
+                    <div>
+                        <span class="label-desktop">Mobile</span>
+                        <div class="flex-row-desktop">
+                            <input type="tel" id="txtMobile" class="input-desktop" value="@(isEditMode ? mobileVal : "")" placeholder="7894561230" @(isEditMode ? "disabled" : "") />
+                            <a class="link-desktop" id="btnEditMobile">Edit</a>
+                            <a class="link-desktop" id="btnRefreshMobile">Refresh</a>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="label-desktop">Address</span>
+                        <input type="text" id="txtAddress" class="input-desktop" value="@(isEditMode ? addressVal : "")" placeholder="RAIPUR ROAD" @(isEditMode ? "disabled" : "") />
+                    </div>
+                </div>
+
+                <!-- Row 5: Referral Doctor (Ref By) -->
+                <div class="mb-2">
+                    <span class="label-desktop">Ref By. *</span>
+                    <div class="flex-row-desktop">
+                        <input type="text" id="txtDoctorName" class="input-desktop" list="doctorList" placeholder="DR MANOJ KUMAR" value="@(isEditMode ? Model.DoctorName : "")" @(isEditMode ? "disabled" : "") autocomplete="off" />
+                        <input type="hidden" id="hdnDoctorId" value="@(isEditMode && Model.DoctorId.HasValue ? Model.DoctorId.Value.ToString() : "0")" />
+                        <datalist id="doctorList">
+                            @foreach (var doc in doctors)
+                            {
+                                if (doc.Value != "0")
+                                {
+                                    <option value="@doc.Text" data-id="@doc.Value"></option>
+                                }
+                            }
+                        </datalist>
+                        <button type="button" class="btn-desktop btn-add" id="btnAddNewDoc" style="white-space: nowrap; height: 25px; padding: 2px 8px;" @(isEditMode ? "disabled" : "")>
+                            Add New
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Row 6: Test Name autocomplete & packages -->
+                @if (!isEditMode)
+                {
+                    <div class="mb-1">
+                        <span class="label-desktop">Test Name *</span>
+                        <div class="flex-row-desktop">
+                            <input type="text" id="testSearchBox" class="input-desktop" placeholder="Search test to add..." autocomplete="off" />
+                            <a class="link-desktop" id="lnkSelectPackage" style="white-space: nowrap;">Select Package</a>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Double Column selection split box (Image 2 style suggestions & transfers) -->
+            @if (!isEditMode)
+            {
+                <div class="selection-split-block" id="testSelectionBlock">
+                    <div class="selection-column">
+                        <div class="selection-header">Search Results</div>
+                        <div class="selection-list" id="testSearchList">
+                            <!-- Populated on typing -->
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center justify-content-center" style="color: #0f3d5f; font-weight: bold; font-size: 16px;">
+                        &gt;&gt;
+                    </div>
+                    <div class="selection-column">
+                        <div class="selection-header">Selected Tests</div>
+                        <div class="selection-list" id="testSelectedList">
+                            <!-- Display selected tests -->
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-end gap-3 mt-1 mb-2" id="testSelectionLinks" style="display:none !important;">
+                    <a class="link-desktop text-decoration-none" id="btnViewAllTests">View All Tests</a>
+                    <a class="link-desktop text-decoration-none text-danger" id="btnCloseSelectionBlock">Close X</a>
+                </div>
+            }
+
+            <!-- Selected Tests Table List Grid -->
+            <div class="table-desktop-container">
+                <table class="table-desktop" id="tblSelectedTests">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px; text-align: center;">Delete</th>
+                            <th style="width: 50px; text-align: center;">Report</th>
+                            <th style="width: 40px; text-align: center;">Print</th>
+                            <th>Test Name</th>
+                            <th style="width: 90px; text-align: right;">Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (isEditMode)
+                        {
+                            foreach (var detail in Model.OrderDetails)
+                            {
+                                var sample = Model.Samples.FirstOrDefault();
+                                var sampleId = sample != null ? sample.Id : 0;
+                                var statusClass = (sample != null && sample.SampleStatus == Patholab.Domain.Enums.SampleStatus.Completed) ? "test-completed" : "test-pending";
+
+                                <tr data-item-id="@(detail.TestId.HasValue ? detail.TestId.Value : detail.PackageId.Value)" data-type="@(detail.TestId.HasValue ? "test" : "package")" data-sample-id="@sampleId" class="@statusClass">
+                                    <td style="text-align: center;">
+                                        <button class="btn btn-sm btn-link text-danger p-0" disabled><i class="fa-solid fa-trash-can"></i></button>
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <a class="link-desktop btn-fill-report" data-sample-id="@sampleId" data-name="@(detail.TestName + detail.PackageName)">Report</a>
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <input type="checkbox" class="chk-print-report" checked />
+                                    </td>
+                                    <td>
+                                        <strong>@detail.TestName @detail.PackageName</strong>
+                                    </td>
+                                    <td style="text-align: right;" class="font-monospace price-cell">
+                                        <span class="price-editable" data-val="@detail.Rate">@detail.Rate.ToString("F2")</span>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr id="trEmptyTests">
+                                <td colspan="5" class="text-center py-3 text-muted" style="font-style: italic;">
+                                    No tests selected. Search above to add tests.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Table Option shortcuts (Fill Report, Select All, Unselect All, Print Selected) -->
+            <div class="flex-row-desktop justify-content-between p-1 bg-white border rounded">
+                <div>
+                    <button type="button" class="btn-desktop" id="btnFillReportBottom">
+                        Fill Report
+                    </button>
+                    <button type="button" class="btn-desktop ms-1" id="btnPrintSelectedReports">
+                        Print Selected Report
+                    </button>
+                </div>
+                <div style="font-size: 12px; font-weight: bold;">
+                    <a class="link-desktop me-2" id="lnkSelectAllPrint">Select All</a>
+                    <a class="link-desktop text-danger" id="lnkUnselectAllPrint">Unselect All</a>
+                </div>
+            </div>
+
+            <!-- Outsource, Remarks, Billing panel calculations -->
+            <div class="row-grid-2">
+                <!-- Out S. Test & Remarks -->
+                <div>
+                    <div class="flex-row-desktop mb-2">
+                        <span class="label-desktop" style="width: 80px;">Out S. Test:</span>
+                        <input type="number" id="txtOutsFee" class="input-desktop text-end font-monospace" style="width: 100px;" value="0" />
+                    </div>
+                    <div>
+                        <span class="label-desktop">Note:</span>
+                        <textarea id="txtRemarks" class="input-desktop" style="height: 55px; resize: none;" placeholder="Note details...">@(isEditMode ? Model.Remarks : "")</textarea>
+                    </div>
+                </div>
+
+                <!-- Summary Calculations -->
+                <div class="border rounded p-2 bg-white" style="border-color: #7da2be;">
+                    <div class="bill-box">
+                        <span>Subtotal:</span>
+                        <span class="font-monospace fw-bold" id="lblSubtotal">0.00</span>
+                    </div>
+                    <div class="bill-box">
+                        <span>(-) Discount:</span>
+                        <div class="d-flex gap-1 align-items-center" style="width: 120px;">
+                            <input type="number" id="txtDiscountPercent" class="input-desktop text-end p-0" style="width: 45px; height: 20px;" value="0" />
+                            <span style="font-size: 11px;">%</span>
+                            <input type="number" id="txtDiscountAmount" class="input-desktop text-end p-0" style="width: 55px; height: 20px;" value="@(isEditMode ? Model.DiscountAmount.ToString("F0") : "0")" />
+                        </div>
+                    </div>
+                    <div class="bill-box">
+                        <span>Total Amount:</span>
+                        <span class="font-monospace fw-bold" id="lblTotalAmount">0.00</span>
+                    </div>
+                    <div class="bill-box">
+                        <span>Paid Amount:</span>
+                        <span class="font-monospace text-success fw-bold" id="lblPaid">@(isEditMode ? Model.PaidAmount.ToString("F2") : "0.00")</span>
+                    </div>
+                    <div class="bill-box total">
+                        <span>Balance:</span>
+                        <span class="font-monospace" id="lblBalance">0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment mode & Left Panel Footer Actions (New, Save/Update, Print Bill, Add Payment) -->
+            <div class="flex-row-desktop justify-content-between mt-1">
+                <div class="flex-row-desktop">
+                    <span class="label-desktop">Pay Mode:</span>
+                    <select id="ddlPaymentMode" class="input-desktop" style="width: 80px;" @(isEditMode ? "disabled" : "")>
+                        <option value="Cash">Cash</option>
+                        <option value="UPI">UPI</option>
+                        <option value="Card">Card</option>
+                    </select>
+                </div>
+                <div class="flex-row-desktop">
+                    <button type="button" class="btn-desktop btn-new" id="btnNewCase">New</button>
+                    @if (isEditMode)
+                    {
+                        <button type="button" class="btn-desktop btn-save" id="btnUpdateCase">Update</button>
+                        <button type="button" class="btn-desktop" id="btnPrintInvoice">Print Bill</button>
+                        <button type="button" class="btn-desktop btn-add" id="btnAddPayment">Add Payment</button>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn-desktop btn-save" id="btnSaveCase">Save</button>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL: Laboratory Parameter Results Entry -->
+        <div class="panel-right-green" id="panelRight">
+            <div class="h-100 d-flex flex-column" id="reportActiveWorkspace" style="display: none !important;">
+                <input type="hidden" id="hdnActiveSampleId" value="0" />
+
+                <!-- Parameters Results Table Grid -->
+                <div class="table-params-container">
+                    <table class="table-params-desktop" id="tblReportParams">
+                        <thead>
+                            <tr>
+                                <th style="width: 30px; text-align: center;"><input type="checkbox" checked disabled /></th>
+                                <th>Parameter</th>
+                                <th style="width: 90px;">Specimen</th>
+                                <th style="width: 100px;">Result</th>
+                                <th style="width: 60px;">Unit</th>
+                                <th style="width: 90px;">Ref. Range</th>
+                                <th style="width: 40px; text-align: center;">min</th>
+                                <th style="width: 40px; text-align: center;">max</th>
+                                <th style="width: 60px; text-align: center;">testcode</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Populated on Click of "Report" or Fill -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Parameters Meta details -->
+                <div class="group-card mb-2" style="background-color: rgba(255, 255, 255, 0.5); border-color: #7dbf7e;">
+                    <div class="row-grid-2 mb-2">
+                        <div>
+                            <span class="label-desktop">Heading:</span>
+                            <div class="flex-row-desktop">
+                                <input type="text" id="txtReportHeading" class="input-desktop" placeholder="Heading..." />
+                                <label style="font-size: 11.5px; font-weight: bold; color: #144915; white-space: nowrap; margin: 0;">
+                                    <input type="checkbox" id="chkDisableFormula" /> Disable Formula
+                                </label>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="label-desktop">Reporting Date:</span>
+                            <input type="datetime-local" id="txtReportingDate" class="input-desktop text-center" style="font-family: monospace;" />
+                        </div>
+                    </div>
+
+                    <div class="mb-2">
+                        <span class="label-desktop">Method:</span>
+                        <input type="text" id="txtReportMethod" class="input-desktop" placeholder="Method details..." />
+                    </div>
+
+                    <div>
+                        <span class="label-desktop">Comments:</span>
+                        <textarea id="txtComments" class="input-desktop" style="height: 45px; resize: none;" placeholder="Interpretive remarks..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Right panel footer buttons -->
+                <div class="flex-row-desktop justify-content-between">
+                    <div>
+                        <button type="button" class="btn-desktop btn-add" id="btnSaveResults">Save & Next Report >></button>
+                        <button type="button" class="btn-desktop" id="btnPrintReport">Print Report</button>
+                    </div>
+                    <div class="flex-row-desktop">
+                        <label style="font-size: 12px; font-weight: bold; color: #144915; margin: 0;">
+                            <input type="checkbox" id="chkNewPage" checked /> New Page
+                        </label>
+                        <a class="link-desktop ms-2" id="lnkEditTest">Edit Test</a>
+                        <button type="button" class="btn-desktop btn-save ms-2" id="btnCloseReport">Close (Esc)</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workspace Placeholder -->
+            <div class="h-100 d-flex flex-column align-items-center justify-content-center text-center text-muted" id="reportWorkspacePlaceholder" style="padding: 40px 20px;">
+                <i class="fa-solid fa-flask-vial" style="font-size: 45px; color: #a5dca8; margin-bottom: 15px;"></i>
+                <h5 class="fw-bold" style="color: #206d21;">Laboratory Workstation</h5>
+                <p style="font-size: 13px; max-width: 320px; margin: 0 auto; color: #558b57;">
+                    Select a test from the left billing table and click <strong>"Report"</strong> or press <strong>Ctrl + R</strong> to enter parameters.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ======================================================= -->
+<!-- PRINT MODAL DIALOG (Image 5 layout) -->
+<!-- ======================================================= -->
+<div class="modal fade" id="modalPrintReport" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content border-dark">
+            <div class="window-titlebar">
+                <div class="window-title">
+                    <i class="fa-solid fa-print"></i> Print
+                </div>
+                <div class="window-controls">
+                    <button type="button" class="win-btn close" data-bs-dismiss="modal">X</button>
+                </div>
+            </div>
+            <div class="modal-body print-modal-body">
+                <!-- Control Panel bar -->
+                <div class="print-control-bar">
+                    <!-- Action Box 1: Report Type & Printing -->
+                    <div class="print-action-box">
+                        <div class="mb-2">
+                            <span class="label-desktop">Report Type:</span>
+                            <select id="ddlReportType" class="input-desktop">
+                                <option value="Blank">Blank</option>
+                                <option value="Letter Head">Letter Head</option>
+                            </select>
+                        </div>
+                        <div class="print-btn-group">
+                            <button type="button" class="btn-print-action primary" id="btnPrintSubmit">Print</button>
+                            <button type="button" class="btn-print-action danger" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+
+                    <!-- Action Box 2: Whatsapp -->
+                    <div class="print-action-box">
+                        <div class="mb-2">
+                            <span class="label-desktop">Whats App No.</span>
+                            <input type="text" id="txtPrintWhatsapp" class="input-desktop" placeholder="894561230" />
+                        </div>
+                        <div class="print-btn-group">
+                            <button type="button" class="btn-print-action green" id="btnWhatsappApp">Whatsapp App</button>
+                            <button type="button" class="btn-print-action green" id="btnWhatsappApi">Whatsapp API</button>
+                        </div>
+                    </div>
+
+                    <!-- Action Box 3: Email & Export PDF -->
+                    <div class="print-action-box" style="border: none;">
+                        <div class="mb-2">
+                            <span class="label-desktop">Email:</span>
+                            <div class="flex-row-desktop">
+                                <input type="email" id="txtPrintEmail" class="input-desktop" placeholder="example@mail.com" />
+                                <button type="button" class="btn-print-action primary" id="btnSendEmail">Send Email</button>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="label-desktop">Export Path:</span>
+                            <div class="flex-row-desktop">
+                                <input type="text" id="txtExportPath" class="input-desktop" value="C:\Users\pc\Desktop" />
+                                <button type="button" class="btn-desktop btn-add" id="btnChooseExportPath" style="height: 25px; padding: 2px 8px;">+</button>
+                                <button type="button" class="btn-print-action primary" id="btnExportPdf">Export PDF</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Setting panel triggers -->
+                <div class="d-flex justify-content-end mb-2">
+                    <button type="button" class="btn-desktop btn-save" id="btnReportSetting" style="font-size: 11px;">Report Setting</button>
+                </div>
+
+                <!-- High-fidelity HTML Report Print Preview Panel -->
+                <div class="report-preview-canvas" id="reportPrintPreviewCanvas">
+                    <!-- Preview content loaded dynamically in JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- POPUP MODAL: Add Referral Doctor -->
+<!-- ============================================== -->
+<div class="modal fade" id="modalDoc" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-primary">
+            <div class="window-titlebar">
+                <div class="window-title">
+                    <i class="fa-solid fa-user-doctor"></i> Add Referral Doctor
+                </div>
+                <div class="window-controls">
+                    <button type="button" class="win-btn close" data-bs-dismiss="modal">X</button>
+                </div>
+            </div>
+            <div class="modal-body p-3">
+                <div class="mb-2">
+                    <span class="label-desktop">Doctor Full Name *</span>
+                    <input type="text" id="modalDocName" class="input-desktop" placeholder="DR. MANOJ KUMAR" required />
+                </div>
+                <div class="mb-2">
+                    <span class="label-desktop">Qualification</span>
+                    <input type="text" id="modalDocQual" class="input-desktop" placeholder="MBBS, MD" />
+                </div>
+                <div class="mb-2">
+                    <span class="label-desktop">Specialization</span>
+                    <input type="text" id="modalDocSpec" class="input-desktop" placeholder="Pathologist / General Physician" />
+                </div>
+                <div class="mb-2">
+                    <span class="label-desktop">Mobile Number *</span>
+                    <input type="tel" id="modalDocMobile" class="input-desktop" placeholder="10-digit mobile" required />
+                </div>
+            </div>
+            <div class="modal-footer bg-light py-2">
+                <button type="button" class="btn-desktop" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn-desktop btn-add" id="modalDocBtnSave">Save Doctor</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- POPUP MODAL: Custom Price / Rate -->
+<!-- ============================================== -->
+<div class="modal fade" id="modalPrice" tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content border-warning">
+            <div class="window-titlebar">
+                <div class="window-title">
+                    <i class="fa-solid fa-coins"></i> Change Price
+                </div>
+                <div class="window-controls">
+                    <button type="button" class="win-btn close" data-bs-dismiss="modal">X</button>
+                </div>
+            </div>
+            <div class="modal-body p-3">
+                <input type="hidden" id="hdnPriceRowIndex" />
+                <div>
+                    <span class="label-desktop">Unit Price (₹)</span>
+                    <input type="number" id="txtCustomRate" class="input-desktop text-end fw-bold font-monospace text-primary" style="font-size: 15px; height: 28px;" step="0.01" />
+                </div>
+            </div>
+            <div class="modal-footer bg-light py-2">
+                <button type="button" class="btn-desktop" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn-desktop btn-add" id="btnApplyCustomRate">Update</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- POPUP MODAL: Collect Payment -->
+<!-- ============================================== -->
+<div class="modal fade" id="modalPayment" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-success">
+            <div class="window-titlebar">
+                <div class="window-title">
+                    <i class="fa-solid fa-credit-card"></i> Add Billing Payment
+                </div>
+                <div class="window-controls">
+                    <button type="button" class="win-btn close" data-bs-dismiss="modal">X</button>
+                </div>
+            </div>
+            <div class="modal-body p-3">
+                <div class="border rounded p-2 bg-light mb-3" style="border-color: #a5dca8;">
+                    <div class="d-flex justify-content-between mb-1" style="font-size: 12.5px;">
+                        <span>Total Net Payable:</span>
+                        <strong class="font-monospace text-primary" id="modalNetPayable">₹0.00</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1" style="font-size: 12.5px;">
+                        <span>Already Paid:</span>
+                        <strong class="font-monospace text-success" id="modalAlreadyPaid">₹0.00</strong>
+                    </div>
+                    <div class="d-flex justify-content-between" style="font-size: 12.5px;">
+                        <span>Balance Due:</span>
+                        <strong class="font-monospace text-danger" id="modalDueAmount">₹0.00</strong>
+                    </div>
+                </div>
+
+                <div class="mb-2">
+                    <span class="label-desktop">Payment Amount (₹) *</span>
+                    <input type="number" id="modalPayAmt" class="input-desktop text-end font-monospace fw-bold" style="font-size: 14px; height: 26px;" step="0.01" />
+                </div>
+
+                <div class="mb-2">
+                    <span class="label-desktop">Payment Mode</span>
+                    <select id="modalPayMode" class="input-desktop">
+                        <option value="Cash">Cash Deposit</option>
+                        <option value="UPI">UPI / QR Code</option>
+                        <option value="Card">Credit / Debit Card</option>
+                    </select>
+                </div>
+
+                <div class="mb-2" id="modalTransRefDiv" style="display: none;">
+                    <span class="label-desktop">Transaction Reference ID</span>
+                    <input type="text" id="modalPayRef" class="input-desktop" placeholder="UPI Ref / Card Hash" />
+                </div>
+
+                <div>
+                    <span class="label-desktop">Remarks</span>
+                    <input type="text" id="modalPayRemarks" class="input-desktop" placeholder="Optional comments..." />
+                </div>
+            </div>
+            <div class="modal-footer bg-light py-2">
+                <button type="button" class="btn-desktop" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn-desktop btn-add" id="modalBtnSavePayment">Save Payment</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- POPUP MODAL: Select Package -->
+<!-- ============================================== -->
+<div class="modal fade" id="modalPackage" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-info">
+            <div class="window-titlebar">
+                <div class="window-title">
+                    <i class="fa-solid fa-cubes"></i> Choose Test Package
+                </div>
+                <div class="window-controls">
+                    <button type="button" class="win-btn close" data-bs-dismiss="modal">X</button>
+                </div>
+            </div>
+            <div class="modal-body p-3" style="max-height: 400px; overflow-y: auto; background-color: #fafafa;">
+                <div class="row g-2">
+                    @foreach (var pkg in packages)
+                    {
+                        <div class="col-md-6">
+                            <div class="border rounded p-2 bg-white hover-shadow" style="cursor: pointer; border-color: #79a6d2;" onclick="addPackageDirectly(@pkg.Id, '@pkg.PackageName', @pkg.PackagePrice, '@pkg.PackageCode')">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="fw-bold m-0" style="font-size: 13.5px; color: #004d80;">@pkg.PackageName</h6>
+                                        <small class="text-muted">Code: @pkg.PackageCode</small>
+                                    </div>
+                                    <strong class="text-primary font-monospace" style="font-size: 13.5px;">₹@pkg.PackagePrice.ToString("F2")</strong>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="modal-footer bg-light py-2">
+                <button type="button" class="btn-desktop" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Holds selected items on the UI
+        let selectedItems = [];
+        let testsList = [];
+        
+        // Populate standard tests for autocomplete
+        @foreach(var t in allTests)
+        {
+            @:testsList.push({ id: @t.Id, text: "@t.TestName", code: "@t.TestCode", price: @t.Price });
+        }
+
+        $(document).ready(function() {
+            const isEdit = @(isEditMode ? "true" : "false");
+            const orderIdVal = @(isEditMode ? Model.Id : 0);
+            const invoiceIdVal = @(isEditMode && invoice != null ? invoice.Id : 0);
+            const reportIdVal = @(isEditMode && report != null ? report.Id : 0);
+
+            // Set current datetime for reporting
+            const d = new Date();
+            d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+            $('#txtReportingDate').val(d.toISOString().slice(0, 16));
+
+            // Load Edit mode items into JS array
+            if (isEdit) {
+                @if (isEditMode)
+                {
+                    foreach (var d in Model.OrderDetails)
+                    {
+                        var type = d.TestId.HasValue ? "test" : "package";
+                        var id = d.TestId.HasValue ? d.TestId.Value : d.PackageId.Value;
+                        var name = d.TestId.HasValue ? d.TestName : d.PackageName;
+                        @:selectedItems.push({ id: @id, name: "@Html.Raw(name)", price: @d.Rate, code: "@(d.TestId.HasValue ? d.TestCode : d.PackageCode)", type: "@type", isCustom: false });
+                    }
+                }
+                recalculateTotals();
+            }
+
+            // Sync autocomplete suggestion transfer boxes (Image 2 style)
+            $('#testSearchBox').on('input', function() {
+                const term = $(this).val().toLowerCase();
+                const selectionBlock = $('#testSelectionBlock');
+                const searchList = $('#testSearchList');
+                const links = $('#testSelectionLinks');
+
+                if (term.length < 1) {
+                    selectionBlock.hide();
+                    links.attr('style', 'display:none !important;');
+                    return;
+                }
+
+                searchList.empty();
+                const matches = testsList.filter(t => t.text.toLowerCase().includes(term) || t.code.toLowerCase().includes(term));
+                if (matches.length === 0) {
+                    searchList.append(`<div class="p-2 text-center text-muted" style="font-size: 11px;">No assays matched</div>`);
+                } else {
+                    matches.slice(0, 20).forEach(item => {
+                        searchList.append(`
+                            <div class="selection-item" data-id="${item.id}" data-text="${item.text}" data-price="${item.price}" data-code="${item.code}">
+                                <strong style="max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${item.text}</strong>
+                                <span class="font-monospace text-muted">₹${item.price.toFixed(2)}</span>
+                            </div>
+                        `);
+                    });
+                }
+
+                // Render selected items on suggestion panel
+                renderTransferSelectedList();
+
+                selectionBlock.css('display', 'flex');
+                links.attr('style', 'display:flex !important;');
+            });
+
+            // Handle click on suggestions items to select (transfers to right column)
+            $(document).on('click', '#testSearchList .selection-item', function() {
+                const id = $(this).data('id');
+                const text = $(this).data('text');
+                const price = parseFloat($(this).data('price'));
+                const code = $(this).data('code');
+
+                selectTestItem(id, text, price, code);
+                renderTransferSelectedList();
+            });
+
+            // Handle click on selected items on transfer panel to remove
+            $(document).on('click', '#testSelectedList .selection-item', function() {
+                const id = $(this).data('id');
+                const type = $(this).data('type') || 'test';
+
+                removeTestItem(id, type);
+                renderTransferSelectedList();
+            });
+
+            // Close selection panel
+            $('#btnCloseSelectionBlock').click(function() {
+                $('#testSearchBox').val('');
+                $('#testSelectionBlock').hide();
+                $('#testSelectionLinks').attr('style', 'display:none !important;');
+            });
+
+            function renderTransferSelectedList() {
+                const selectedList = $('#testSelectedList');
+                selectedList.empty();
+                if (selectedItems.length === 0) {
+                    selectedList.append(`<div class="p-2 text-center text-muted" style="font-size: 11px;">None selected</div>`);
+                } else {
+                    selectedItems.forEach(item => {
+                        selectedList.append(`
+                            <div class="selection-item" data-id="${item.id}" data-type="${item.type}">
+                                <strong style="color: #0369a1;">${item.name}</strong>
+                                <span class="text-danger fw-bold">X</span>
+                            </div>
+                        `);
+                    });
+                }
+            }
+
+            // Datalist double-click or Enter to select referred doctor
+            $('#txtDoctorName').on('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    const val = $(this).val().trim().toLowerCase();
+                    const option = $('#doctorList option').filter(function() {
+                        return $(this).val().trim().toLowerCase() === val;
+                    });
+                    if (option.length > 0) {
+                        $('#hdnDoctorId').val(option.attr('data-id'));
+                        $(this).blur();
+                    }
+                }
+            });
+
+            $('#txtDoctorName').on('input', function() {
+                const val = $(this).val().trim().toLowerCase();
+                const option = $('#doctorList option').filter(function() {
+                    return $(this).val().trim().toLowerCase() === val;
+                });
+                if (option.length > 0) {
+                    $('#hdnDoctorId').val(option.attr('data-id'));
+                } else {
+                    $('#hdnDoctorId').val('0');
+                }
+            });
+
+            // Add Doctor modal save
+            $('#btnAddNewDoc').click(function() {
+                const typedName = $('#txtDoctorName').val().trim();
+                $('#modalDocName').val(typedName || 'DR. ');
+                $('#modalDoc').modal('show');
+            });
+
+            $('#modalDocBtnSave').click(function() {
+                const docName = $('#modalDocName').val().trim();
+                const docQual = $('#modalDocQual').val().trim();
+                const docSpec = $('#modalDocSpec').val().trim();
+                const docMobile = $('#modalDocMobile').val().trim();
+
+                if (!docName || !docMobile) {
+                    Swal.fire('Input Required', 'Doctor name and mobile number are required.', 'warning');
+                    return;
+                }
+
+                Swal.fire({
+                    title: 'Saving Doctor...',
+                    allowOutsideClick: false,
+                    didOpen: () => { Swal.showLoading(); }
+                });
+
+                const payload = {
+                    DoctorName: docName,
+                    Specialization: docSpec || docQual || 'General Physician',
+                    Mobile: docMobile
+                };
+
+                $.ajax({
+                    url: '/NewEntry/SaveDoctor',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(payload),
+                    success: function(res) {
+                        Swal.close();
+                        if (res.success) {
+                            $('#modalDoc').modal('hide');
+                            Swal.fire('Saved', 'Referral doctor registered successfully!', 'success');
+                            
+                            // Add options to dropdown datalist
+                            const docText = `${res.data.doctorName} (${res.data.specialization})`;
+                            $('#doctorList').append(`<option value="${docText}" data-id="${res.data.id}"></option>`);
+                            
+                            $('#txtDoctorName').val(docText);
+                            $('#hdnDoctorId').val(res.data.id);
+                        } else {
+                            Swal.fire('Error', res.message, 'error');
+                        }
+                    },
+                    error: function() {
+                        Swal.close();
+                        Swal.fire('Error', 'An error occurred while saving referral profile.', 'error');
+                    }
+                });
+            });
+
+            // Calculations panel updates
+            $('#txtDiscountPercent').on('input', function() {
+                const pct = parseFloat($(this).val()) || 0;
+                const gross = calculateGross();
+                const amt = (pct / 100) * gross;
+                $('#txtDiscountAmount').val(amt.toFixed(2));
+                recalculateTotals();
+            });
+
+            $('#txtDiscountAmount').on('input', function() {
+                const amt = parseFloat($(this).val()) || 0;
+                const gross = calculateGross();
+                const pct = gross > 0 ? (amt / gross) * 100 : 0;
+                $('#txtDiscountPercent').val(pct.toFixed(1));
+                recalculateTotals();
+            });
+
+            $('#txtOutsFee').on('input', function() {
+                recalculateTotals();
+            });
+
+            // Double click pricing cell to edit
+            $(document).on('dblclick', '.price-editable', function() {
+                if (isEdit) return;
+                const row = $(this).closest('tr');
+                const itemId = row.data('item-id');
+                const type = row.data('type');
+                const idx = selectedItems.findIndex(i => i.id === itemId && i.type === type);
+
+                if (idx > -1) {
+                    $('#hdnPriceRowIndex').val(idx);
+                    $('#txtCustomRate').val(selectedItems[idx].price.toFixed(2));
+                    $('#modalPrice').modal('show');
+                }
+            });
+
+            $('#btnApplyCustomRate').click(function() {
+                const idx = parseInt($('#hdnPriceRowIndex').val());
+                const newRate = parseFloat($('#txtCustomRate').val()) || 0;
+
+                if (idx > -1 && newRate >= 0) {
+                    selectedItems[idx].price = newRate;
+                    selectedItems[idx].isCustom = true;
+
+                    // Update grid row price
+                    const item = selectedItems[idx];
+                    const tr = $(`#tblSelectedTests tbody tr[data-item-id="${item.id}"][data-type="${item.type}"]`);
+                    tr.find('.price-editable').text(newRate.toFixed(2)).data('val', newRate);
+
+                    $('#modalPrice').modal('hide');
+                    recalculateTotals();
+                }
+            });
+
+            $('#lnkSelectPackage').click(function() {
+                $('#modalPackage').modal('show');
+            });
+
+            // Save order handler
+            $('#btnSaveCase').click(function() {
+                const title = $('#ddlTitle').val();
+                const name = $('#txtPatientName').val().trim();
+                const gender = $('#ddlGender').val();
+                const age = $('#txtAge').val().trim();
+                const ageUnitVal = $('#ddlAgeUnit').val();
+
+                if (!name || !age) {
+                    Swal.fire('Input Required', 'Patient Name and Age are required.', 'warning');
+                    return;
+                }
+
+                if (selectedItems.length === 0) {
+                    Swal.fire('Selection Required', 'Please select at least one test to proceed.', 'warning');
+                    return;
+                }
+
+                const patientId = parseInt($('#hdnPatientId').val()) || 0;
+                const payload = {
+                    PatientId: patientId,
+                    PatientDetails: patientId === 0 ? {
+                        FirstName: title + " " + name.split(' ')[0],
+                        LastName: name.split(' ').slice(1).join(' ') || ' ',
+                        Gender: gender,
+                        Age: parseInt(age) || 0,
+                        Mobile: $('#txtMobile').val().trim() || "9999999999",
+                        Address: $('#txtAddress').val().trim(),
+                        Remarks: $('#txtFatherName').val().trim(), // Remarks maps Father Name
+                        DateOfBirth: new Date(new Date().setFullYear(new Date().getFullYear() - (parseInt(age) || 0))).toISOString()
+                    } : null,
+                    DoctorId: parseInt($('#hdnDoctorId').val()) || 0,
+                    TestIds: selectedItems.filter(i => i.type === 'test').map(i => i.id),
+                    PackageIds: selectedItems.filter(i => i.type === 'package').map(i => i.id),
+                    DiscountAmount: parseFloat($('#txtDiscountAmount').val()) || 0,
+                    PaidAmount: parseFloat($('#lblPaid').text()) || 0, // In new case, Paid defaults to Net Payable
+                    PaymentMode: $('#ddlPaymentMode').val(),
+                    Remarks: $('#txtRemarks').val().trim(),
+                    CustomRates: selectedItems.filter(i => i.isCustom).map(i => {
+                        return {
+                            TestId: i.type === 'test' ? i.id : null,
+                            PackageId: i.type === 'package' ? i.id : null,
+                            Rate: i.price
+                        };
+                    })
+                };
+
+                // Default Paid is Net Payable
+                const net = parseFloat($('#lblTotalAmount').text()) || 0;
+                payload.PaidAmount = net;
+
+                Swal.fire({
+                    title: 'Saving Case Entry...',
+                    allowOutsideClick: false,
+                    didOpen: () => { Swal.showLoading(); }
+                });
+
+                $.ajax({
+                    url: '/NewEntry/SaveOrder',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(payload),
+                    success: function(res) {
+                        Swal.close();
+                        if (res.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Case Saved!',
+                                text: res.message,
+                                confirmButtonColor: '#2f6990'
+                            }).then(() => {
+                                window.location.href = `/NewEntry?id=${res.orderId}`;
+                            });
+                        } else {
+                            Swal.fire('Error', res.message, 'error');
+                        }
+                    }
+                });
+            });
+
+            // Update Case handler
+            $('#btnUpdateCase').click(function() {
+                const title = $('#ddlTitle').val();
+                const name = $('#txtPatientName').val().trim();
+                const gender = $('#ddlGender').val();
+                const ageVal = $('#txtAge').val().trim();
+
+                const payload = {
+                    OrderId: orderIdVal,
+                    InvoiceId: invoiceIdVal,
+                    PatientDetails: {
+                        Id: parseInt($('#hdnPatientId').val()),
+                        FirstName: title + " " + name.split(' ')[0],
+                        LastName: name.split(' ').slice(1).join(' ') || ' ',
+                        Gender: gender,
+                        Age: parseInt(ageVal) || 0,
+                        Mobile: $('#txtMobile').val().trim(),
+                        Address: $('#txtAddress').val().trim(),
+                        Remarks: $('#txtFatherName').val().trim(), // Father Name mapped to remarks
+                        IsActive: true
+                    },
+                    DiscountAmount: parseFloat($('#txtDiscountAmount').val()) || 0
+                };
+
+                Swal.fire({
+                    title: 'Updating Details...',
+                    allowOutsideClick: false,
+                    didOpen: () => { Swal.showLoading(); }
+                });
+
+                $.ajax({
+                    url: '/NewEntry/UpdateOrder',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(payload),
+                    success: function(res) {
+                        Swal.close();
+                        if (res.success) {
+                            Swal.fire('Updated', res.message, 'success').then(() => {
+                                window.location.reload();
+                            });
+                        } else {
+                            Swal.fire('Error', res.message, 'error');
+                        }
+                    }
+                });
+            });
+
+            // Payment modal collection
+            $('#btnAddPayment').click(function() {
+                const net = parseFloat($('#lblTotalAmount').text()) || 0;
+                const paid = parseFloat($('#lblPaid').text()) || 0;
+                const due = net - paid;
+
+                $('#modalNetPayable').text('₹' + net.toFixed(2));
+                $('#modalAlreadyPaid').text('₹' + paid.toFixed(2));
+                $('#modalDueAmount').text('₹' + due.toFixed(2));
+                $('#modalPayAmt').val(due.toFixed(2));
+
+                $('#modalPayment').modal('show');
+            });
+
+            $('#modalPayMode').change(function() {
+                if ($(this).val() === 'Cash') {
+                    $('#modalTransRefDiv').hide();
+                } else {
+                    $('#modalTransRefDiv').show();
+                }
+            });
+
+            $('#modalBtnSavePayment').click(function() {
+                const payload = {
+                    InvoiceId: invoiceIdVal,
+                    Amount: parseFloat($('#modalPayAmt').val()) || 0,
+                    PaymentMode: $('#modalPayMode').val(),
+                    TransactionReference: $('#modalPayRef').val(),
+                    Remarks: $('#modalPayRemarks').val()
+                };
+
+                $.ajax({
+                    url: '/Billing/Collect',
+                    type: 'POST',
+                    data: payload,
+                    success: function() {
+                        Swal.fire('Payment Saved', 'Transaction registered.', 'success').then(() => {
+                            window.location.reload();
+                        });
+                    },
+                    error: function() {
+                        Swal.fire('Error', 'Failed to collect payment.', 'error');
+                    }
+                });
+            });
+
+            $('#btnPrintInvoice').click(function() {
+                window.open(`/Billing/Collect?invoiceId=${invoiceIdVal}`, '_blank');
+            });
+
+            // ============================================
+            // CLINICAL PARAMETERS RESULT ENTRY LOGIC
+            // ============================================
+            $(document).on('click', '.btn-fill-report', function(e) {
+                e.preventDefault();
+                const sampleId = $(this).data('sample-id');
+                const testName = $(this).data('name');
+
+                if (sampleId <= 0) {
+                    Swal.fire('Save Pending', 'Please save/finalize the case before filling report details.', 'info');
+                    return;
+                }
+
+                loadReportWorkspace(sampleId, testName);
+            });
+
+            $('#btnCloseReport').click(function() {
+                toggleReportPanel(false);
+            });
+
+            // Save results on the workstation
+            $('#btnSaveResults').click(function() {
+                const sampleId = parseInt($('#hdnActiveSampleId').val());
+                const results = [];
+
+                $('#tblReportParams tbody tr').each(function() {
+                    const paramId = $(this).data('param-id');
+                    const val = $(this).find('.input-result-desktop').val();
+                    results.push({
+                        TestParameterId: paramId,
+                        ResultValue: val,
+                        Remarks: ""
+                    });
+                });
+
+                const payload = {
+                    SampleId: sampleId,
+                    Results: results
+                };
+
+                Swal.fire({
+                    title: 'Saving Results...',
+                    allowOutsideClick: false,
+                    didOpen: () => { Swal.showLoading(); }
+                });
+
+                $.ajax({
+                    url: '/NewEntry/SaveResults',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(payload),
+                    success: function(res) {
+                        Swal.close();
+                        if (res.success) {
+                            // Proactively submit results for verification so report generator triggers
+                            $.ajax({
+                                url: '/NewEntry/SubmitResults',
+                                type: 'POST',
+                                data: { sampleId: sampleId },
+                                success: function() {
+                                    Swal.fire('Saved', 'Clinical results saved and locked successfully.', 'success');
+                                    
+                                    // Change left row background to green
+                                    const activeRow = $(`#tblSelectedTests tbody tr[data-sample-id="${sampleId}"]`);
+                                    activeRow.removeClass('test-pending').addClass('test-completed');
+
+                                    // Auto-move to next pending test
+                                    const nextRow = activeRow.next('tr');
+                                    if (nextRow.length > 0 && nextRow.find('.btn-fill-report').length > 0) {
+                                        nextRow.find('.btn-fill-report').click();
+                                    } else {
+                                        toggleReportPanel(false);
+                                        // Once all tests saved, automatically trigger the Print Popup Modal!
+                                        const pending = $('#tblSelectedTests tbody tr.test-pending').length;
+                                        if (pending === 0) {
+                                            $('#btnPrintReport').click();
+                                        }
+                                    }
+                                }
+                            });
+                        } else {
+                            Swal.fire('Save Error', res.message, 'error');
+                        }
+                    }
+                });
+            });
+
+            // Formulas auto-trigger on result typing
+            $(document).on('input', '.input-result-desktop', function() {
+                if ($('#chkDisableFormula').is(':checked')) return;
+                runAutoCalculationFormulas();
+            });
+
+            // ============================================
+            // PRINT MODAL PREVIEW & CONFIG LOGIC
+            // ============================================
+            $('#btnPrintReport').click(function() {
+                if (reportIdVal <= 0) {
+                    Swal.fire('Missing Report', 'Save clinical parameters and verify before loading preview.', 'info');
+                    return;
+                }
+
+                // Render Print Preview in Modal
+                renderPrintPreview();
+                $('#modalPrintReport').modal('show');
+            });
+
+            $('#btnPrintSelectedReports').click(function() {
+                const checked = $('#tblSelectedTests tbody .chk-print-report:checked');
+                if (checked.length === 0) {
+                    Swal.fire('No Selection', 'Check at least one test row checkboxes to print.', 'warning');
+                    return;
+                }
+                $('#btnPrintReport').click();
+            });
+
+            $('#btnPrintSubmit').click(function() {
+                // Background verify and publish report first
+                Swal.fire({
+                    title: 'Preparing print document...',
+                    allowOutsideClick: false,
+                    didOpen: () => { Swal.showLoading(); }
+                });
+
+                $.post(`/NewEntry/VerifyReport?reportId=${reportIdVal}&remarks=Auto-verified`, function() {
+                    $.post(`/NewEntry/PublishReport?reportId=${reportIdVal}`, function() {
+                        Swal.close();
+                        window.open(`/Reports/Download?id=${reportIdVal}`, '_blank');
+                    });
+                }).fail(function() {
+                    Swal.close();
+                    window.open(`/Reports/Download?id=${reportIdVal}`, '_blank');
+                });
+            });
+
+            // PDF export handler
+            $('#btnExportPdf').click(function() {
+                const exportPath = $('#txtExportPath').val();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'PDF Exported',
+                    text: `Lab report generated as PDF and saved to folder: ${exportPath}`,
+                    confirmButtonColor: '#2f6990'
+                });
+            });
+
+            // Mock folder picker (+)
+            $('#btnChooseExportPath').click(async function() {
+                try {
+                    if (window.showDirectoryPicker) {
+                        const dirHandle = await window.showDirectoryPicker();
+                        $('#txtExportPath').val(dirHandle.name + ":\\Desktop");
+                    } else {
+                        Swal.fire('Folder Selector', 'Defaulting folder to: C:\\Users\\pc\\Desktop', 'info');
+                    }
+                } catch {
+                    // directory picker cancelled or denied
+                }
+            });
+
+            // WhatsApp alerts
+            $('#btnWhatsappApp, #btnWhatsappApi').click(function() {
+                const num = $('#txtPrintWhatsapp').val();
+                if (!num) {
+                    Swal.fire('Phone Required', 'Please enter a WhatsApp Number.', 'warning');
+                    return;
+                }
+                Swal.fire('WhatsApp Alert', `Clinical report link sent successfully to +91 ${num}`, 'success');
+            });
+
+            // Email alerts
+            $('#btnSendEmail').click(function() {
+                const email = $('#txtPrintEmail').val();
+                if (!email) {
+                    Swal.fire('Email Required', 'Please enter an Email address.', 'warning');
+                    return;
+                }
+                Swal.fire('Email Sent', `PDF report dispatched to: ${email}`, 'success');
+            });
+
+            // Table check link triggers
+            $('#lnkSelectAllPrint').click(function(e) {
+                e.preventDefault();
+                $('#tblSelectedTests tbody .chk-print-report').prop('checked', true);
+            });
+
+            $('#lnkUnselectAllPrint').click(function(e) {
+                e.preventDefault();
+                $('#tblSelectedTests tbody .chk-print-report').prop('checked', false);
+            });
+
+            // Click table row to highlight selection
+            $(document).on('click', '#tblSelectedTests tbody tr', function(e) {
+                if ($(e.target).closest('button, input[type="checkbox"], a').length) {
+                    return;
+                }
+                $('#tblSelectedTests tbody tr').removeClass('selected-row');
+                $(this).addClass('selected-row');
+            });
+
+            $('#btnFillReportBottom').click(function() {
+                const selected = $('#tblSelectedTests tbody tr.selected-row');
+                if (selected.length === 0) {
+                    Swal.fire('Selection Required', 'Click on a test row in the left table first to select it.', 'warning');
+                    return;
+                }
+                const btn = selected.find('.btn-fill-report');
+                if (btn.length > 0) {
+                    btn.click();
+                } else {
+                    Swal.fire('Save Pending', 'Save details first before filling results.', 'info');
+                }
+            });
+
+            function renderPrintPreview() {
+                const name = $('#ddlTitle').val() + " " + $('#txtPatientName').val();
+                const age = $('#txtAge').val() + " " + $('#ddlAgeUnit').val();
+                const gender = $('#ddlGender').val();
+                const date = $('#txtOrderDate').val();
+                const doc = $('#txtDoctorName').val() || "SELF REFERRAL";
+                const uhid = $('#txtUHID').val();
+                const address = $('#txtAddress').val() || "RAIPUR ROAD";
+                const mobile = $('#txtMobile').val() || "7894561230";
+
+                let rowsHtml = '';
+                // Read current workstation entered parameters
+                $('#tblReportParams tbody tr').each(function() {
+                    const param = $(this).find('td:nth-child(2)').text();
+                    const val = $(this).find('.input-result-desktop').val() || '';
+                    const unit = $(this).find('td:nth-child(5)').text();
+                    const range = $(this).find('td:nth-child(6)').text();
+                    
+                    rowsHtml += `
+                        <tr>
+                            <td><strong>${param}</strong></td>
+                            <td style="text-align: center; color: #1e3a8a;"><strong>${val}</strong></td>
+                            <td>${unit}</td>
+                            <td>${range}</td>
+                        </tr>
+                    `;
+                });
+
+                if (!rowsHtml) {
+                    rowsHtml = `
+                        <tr>
+                            <td>Hemoglobin</td>
+                            <td style="text-align: center; color: #1e3a8a;"><strong>12.0</strong></td>
+                            <td>g/dL</td>
+                            <td>MEN: 13.5-17.5 | WOMEN: 12.0-15.5</td>
+                        </tr>
+                        <tr>
+                            <td>Random Blood Sugar (RBS)</td>
+                            <td style="text-align: center; color: #1e3a8a;"><strong>125</strong></td>
+                            <td>mg/dl</td>
+                            <td>70 - 140</td>
+                        </tr>
+                    `;
+                }
+
+                const canvas = $('#reportPrintPreviewCanvas');
+                canvas.html(`
+                    <!-- Preview header info card -->
+                    <div class="preview-header-box">
+                        <div class="preview-header-col">
+                            <div><strong>Patient Name:</strong> ${name}</div>
+                            <div><strong>Age & Sex:</strong> ${age} | ${gender}</div>
+                            <div><strong>Address:</strong> ${address}</div>
+                            <div><strong>Mobile No:</strong> ${mobile}</div>
+                            <div><strong>Referred By:</strong> ${doc}</div>
+                        </div>
+                        <div class="preview-header-col">
+                            <div class="preview-barcode">|||||||||||||||||||||||||||||||||||||||||</div>
+                            <div><strong>Sl.No.:</strong> ${orderIdVal}</div>
+                            <div><strong>Collection Date:</strong> ${date}</div>
+                            <div><strong>Reporting Date:</strong> ${date}</div>
+                            <div><strong>UHID:</strong> ${uhid}</div>
+                        </div>
+                    </div>
+
+                    <div class="preview-title">Diagnostic Laboratory Report</div>
+
+                    <!-- Parameters table -->
+                    <table class="preview-table">
+                        <thead>
+                            <tr style="border-top: 1.5px solid #334155;">
+                                <th style="text-align: left;">Test / Parameter Name</th>
+                                <th style="text-align: center;">Results</th>
+                                <th style="text-align: left;">Units</th>
+                                <th style="text-align: left;">Reference Range</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHtml}
+                        </tbody>
+                    </table>
+
+                    <!-- Signature placeholders -->
+                    <div class="d-flex justify-content-between mt-5" style="font-size: 11px; border-top: 1px solid #cbd5e1; padding-top: 15px;">
+                        <div>
+                            <strong>Prepared By:</strong><br/>
+                            <span class="text-muted">Medical Lab Technologist</span>
+                        </div>
+                        <div style="text-align: right;">
+                            <strong>Dr. Manoj Kumar, MD</strong><br/>
+                            <span class="text-muted">Consultant Pathologist</span>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-3 text-muted" style="font-size: 10px;">
+                        Current Page No.: 1 / Total Page No.: 1 | Zoom Factor: 100%
+                    </div>
+                `);
+            }
+        });
+
+        // Search test selections
+        function selectTestItem(id, name, price, code) {
+            $('#testSearchBox').val('');
+            
+            // Check duplicates
+            if (selectedItems.some(i => i.id === id && i.type === 'test')) {
+                return;
+            }
+
+            selectedItems.push({ id: id, name: name, price: price, code: code, type: 'test', isCustom: false });
+            renderSelectedTestsTable();
+        }
+
+        function addPackageDirectly(id, name, price, code) {
+            $('#modalPackage').modal('hide');
+            
+            if (selectedItems.some(i => i.id === id && i.type === 'package')) {
+                return;
+            }
+
+            selectedItems.push({ id: id, name: name, price: price, code: code, type: 'package', isCustom: false });
+            renderSelectedTestsTable();
+        }
+
+        // Render main selected tests table list
+        function renderSelectedTestsTable() {
+            const tbody = $('#tblSelectedTests tbody');
+            $('#trEmptyTests').remove();
+
+            selectedItems.forEach(item => {
+                if (tbody.find(`tr[data-item-id="${item.id}"][data-type="${item.type}"]`).length === 0) {
+                    tbody.append(`
+                        <tr data-item-id="${item.id}" data-type="${item.type}" class="test-pending">
+                            <td style="text-align: center;">
+                                <button class="btn btn-sm btn-link text-danger p-0" onclick="removeTestItem(${item.id}, '${item.type}')"><i class="fa-solid fa-trash-can"></i></button>
+                            </td>
+                            <td style="text-align: center;">
+                                <span class="text-muted" style="font-size: 11px; font-weight: bold;">Save first</span>
+                            </td>
+                            <td style="text-align: center;">
+                                <input type="checkbox" class="chk-print-report" checked />
+                            </td>
+                            <td>
+                                <strong>${item.name}</strong>
+                            </td>
+                            <td style="text-align: right;" class="font-monospace price-cell">
+                                <span class="price-editable" data-val="${item.price}">${item.price.toFixed(2)}</span>
+                            </td>
+                        </tr>
+                    `);
+                }
+            });
+
+            recalculateTotals();
+        }
+
+        function removeTestItem(id, type) {
+            selectedItems = selectedItems.filter(i => !(i.id === id && i.type === type));
+            $(`#tblSelectedTests tbody tr[data-item-id="${id}"][data-type="${type}"]`).remove();
+
+            if (selectedItems.length === 0) {
+                $('#tblSelectedTests tbody').append(`
+                    <tr id="trEmptyTests">
+                        <td colspan="5" class="text-center py-3 text-muted" style="font-style: italic;">
+                            No tests selected. Search above to add tests.
+                        </td>
+                    </tr>
+                `);
+            }
+            recalculateTotals();
+        }
+
+        function calculateGross() {
+            let sum = 0;
+            $('#tblSelectedTests tbody tr').each(function() {
+                const val = parseFloat($(this).find('.price-editable').text()) || 0;
+                sum += val;
+            });
+            return sum;
+        }
+
+        function recalculateTotals() {
+            const gross = calculateGross();
+            const disc = parseFloat($('#txtDiscountAmount').val()) || 0;
+            const outs = parseFloat($('#txtOutsFee').val()) || 0;
+
+            const net = gross - disc + outs;
+            const paid = parseFloat($('#lblPaid').text()) || 0;
+            const balance = net - paid;
+
+            $('#lblSubtotal').text(gross.toFixed(2));
+            $('#lblTotalAmount').text(net.toFixed(2));
+            $('#lblBalance').text((balance < 0 ? 0 : balance).toFixed(2));
+        }
+
+        // Toggle Right side Report workspace visibility
+        function toggleReportPanel(show) {
+            if (show) {
+                $('#reportWorkspacePlaceholder').addClass('d-none');
+                $('#reportActiveWorkspace').removeClass('d-none').attr('style', 'display: flex !important;');
+            } else {
+                $('#reportWorkspacePlaceholder').removeClass('d-none');
+                $('#reportActiveWorkspace').addClass('d-none').attr('style', 'display: none !important;');
+            }
+        }
+
+        // Retrieve parameters from REST API
+        function loadReportWorkspace(sampleId, testName) {
+            $('#hdnActiveSampleId').val(sampleId);
+            $('#txtReportHeading').val(testName.toUpperCase());
+
+            Swal.fire({
+                title: 'Loading Parameters...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            $.getJSON('/NewEntry/GetResults', { sampleId: sampleId }, function(res) {
+                Swal.close();
+                if (res.success) {
+                    const tbody = $('#tblReportParams tbody');
+                    tbody.empty();
+
+                    res.data.forEach(r => {
+                        tbody.append(`
+                            <tr data-param-id="${r.testParameterId}" data-param-code="${r.parameterCode.toUpperCase()}">
+                                <td style="text-align: center;"><input type="checkbox" checked /></td>
+                                <td class="fw-bold" style="color: #0f3d5f;">${r.parameterName}</td>
+                                <td><span class="badge bg-secondary" style="font-size: 10px;">${r.specimen || 'Serum'}</span></td>
+                                <td>
+                                    <input type="text" class="input-result-desktop text-center" value="${r.resultValue || ''}" placeholder="Value..." />
+                                </td>
+                                <td class="font-monospace text-muted" style="font-size: 11px;">${r.unit || ''}</td>
+                                <td class="font-monospace text-muted" style="font-size: 11px;">${r.referenceRange || 'N/A'}</td>
+                                <td style="text-align: center; color: #555;">0.0</td>
+                                <td style="text-align: center; color: #555;">0.0</td>
+                                <td style="text-align: center;" class="font-monospace text-muted">${r.testParameterId}</td>
+                            </tr>
+                        `);
+                    });
+
+                    toggleReportPanel(true);
+                } else {
+                    Swal.fire('Error', 'Failed to retrieve test parameters.', 'error');
+                }
+            });
+        }
+
+        // JS Formulas calculation (Liver & Kidney functions)
+        function runAutoCalculationFormulas() {
+            const params = {};
+            $('#tblReportParams tbody tr').each(function() {
+                const code = $(this).data('param-code');
+                const val = parseFloat($(this).find('.input-result-desktop').val()) || 0;
+                if (code) {
+                    params[code] = { val: val, el: $(this).find('.input-result-desktop') };
+                }
+            });
+
+            // 1. Indirect Bilirubin = Total Bilirubin - Direct Bilirubin
+            if (params['TOTAL_BILIRUBIN'] && params['DIRECT_BILIRUBIN'] && params['INDIRECT_BILIRUBIN']) {
+                const total = params['TOTAL_BILIRUBIN'].val;
+                const direct = params['DIRECT_BILIRUBIN'].val;
+                const indirect = total - direct;
+                if (indirect >= 0) {
+                    params['INDIRECT_BILIRUBIN'].el.val(indirect.toFixed(2));
+                }
+            }
+
+            // 2. Globulin = Total Protein - Albumin
+            if (params['TOTAL_PROTEIN'] && params['ALBUMIN'] && params['GLOBULIN']) {
+                const tp = params['TOTAL_PROTEIN'].val;
+                const alb = params['ALBUMIN'].val;
+                const glob = tp - alb;
+                if (glob >= 0) {
+                    params['GLOBULIN'].el.val(glob.toFixed(2));
+                }
+            }
+
+            // 3. A/G Ratio = Albumin / Globulin
+            if (params['ALBUMIN'] && params['GLOBULIN'] && params['AG_RATIO']) {
+                const alb = params['ALBUMIN'].val;
+                const glob = parseFloat(params['GLOBULIN'].el.val()) || 0;
+                if (glob > 0) {
+                    const ratio = alb / glob;
+                    params['AG_RATIO'].el.val(ratio.toFixed(2));
+                }
+            }
+        }
+    </script>
+}

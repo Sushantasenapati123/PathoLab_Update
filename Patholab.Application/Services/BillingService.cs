@@ -195,6 +195,51 @@ namespace Patholab.Application.Services
             };
         }
 
+        public async Task UpdateInvoiceDiscountAsync(int invoiceId, decimal discountAmount, CancellationToken cancellationToken = default)
+        {
+            var invoice = await _context.Invoices
+                .Include(i => i.Order)
+                .FirstOrDefaultAsync(i => i.Id == invoiceId && !i.DeletedFlag, cancellationToken);
+
+            if (invoice == null) throw new Exception("Invoice not found.");
+            if (discountAmount < 0) throw new Exception("Discount cannot be negative.");
+            if (discountAmount > invoice.GrossAmount) throw new Exception("Discount cannot exceed gross amount.");
+
+            await _context.BeginTransactionAsync(cancellationToken);
+            try
+            {
+                var netAmount = invoice.GrossAmount - discountAmount;
+                var paidAmount = invoice.PaidAmount;
+                
+                var dueAmount = netAmount - paidAmount;
+                if (dueAmount < 0) dueAmount = 0;
+
+                invoice.DiscountAmount = discountAmount;
+                invoice.NetAmount = netAmount;
+                invoice.DueAmount = dueAmount;
+                invoice.InvoiceStatus = dueAmount == 0 ? InvoiceStatus.Paid : 
+                                        paidAmount == 0 ? InvoiceStatus.Unpaid : InvoiceStatus.PartiallyPaid;
+                invoice.UpdatedOn = DateTime.UtcNow;
+                invoice.UpdatedBy = "System";
+
+                invoice.Order.DiscountAmount = discountAmount;
+                invoice.Order.NetAmount = netAmount;
+                invoice.Order.DueAmount = dueAmount;
+                invoice.Order.PaymentStatus = dueAmount == 0 ? PaymentStatus.Paid : 
+                                              paidAmount == 0 ? PaymentStatus.Unpaid : PaymentStatus.PartiallyPaid;
+                invoice.Order.UpdatedOn = DateTime.UtcNow;
+                invoice.Order.UpdatedBy = "System";
+
+                await _context.SaveChangesAsync(cancellationToken);
+                await _context.CommitTransactionAsync(cancellationToken);
+            }
+            catch
+            {
+                await _context.RollbackTransactionAsync(cancellationToken);
+                throw;
+            }
+        }
+
         private static InvoiceDto MapToDto(Invoice i)
         {
             return new InvoiceDto

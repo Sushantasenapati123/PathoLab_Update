@@ -327,6 +327,9 @@
             </a>
             
             <div class="menu-label">Registration & Bills</div>
+            <a href="/NewEntry" class="nav-link-custom @(ViewContext.RouteData.Values["controller"]?.ToString() == "NewEntry" ? "active" : "")">
+                <i class="fa-solid fa-square-plus text-success"></i> + New Entry
+            </a>
             <a href="/Patients" class="nav-link-custom @(ViewContext.RouteData.Values["controller"]?.ToString() == "Patients" ? "active" : "")">
                 <i class="fa-solid fa-hospital-user"></i> Patients Master
             </a>
@@ -442,7 +445,7 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
-    <!-- Collapsible Sidebar Toggle on Mobile -->
+    <!-- Collapsible Sidebar Toggle on Mobile & Shortcuts -->
     <script>
         $(document).ready(function() {
             $('#mobile-toggle-btn').click(function() {
@@ -454,6 +457,28 @@
                 } else {
                     sidebar.css('left', '0px');
                     workspace.css('margin-left', '260px');
+                }
+            });
+
+            // Global Keyboard Shortcuts
+            $(document).keydown(function(e) {
+                if (e.key === "F1") {
+                    e.preventDefault();
+                    window.location.href = "/NewEntry";
+                }
+                if (e.ctrlKey && (e.key === 'r' || e.key === 'R')) {
+                    const firstFillBtn = $('.btn-fill-report').first();
+                    if (firstFillBtn.length > 0) {
+                        e.preventDefault();
+                        firstFillBtn.click();
+                    }
+                }
+                if (e.key === "Escape") {
+                    const closeBtn = $('#btnCloseReport');
+                    if (closeBtn.length > 0 && !closeBtn.hasClass('d-none')) {
+                        e.preventDefault();
+                        closeBtn.click();
+                    }
                 }
             });
         });
